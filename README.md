@@ -1,7 +1,18 @@
 [![hacs_badge](https://img.shields.io/badge/HACS-Default-orange.svg)](https://github.com/custom-components/hacs)
 ![Version](https://img.shields.io/github/v/release/basnijholt/adaptive-lighting)
 
-# Adaptive Lighting component for Home Assistant
+# Natural Adaptive Lighting component for Home Assistant based on basnijholt/adaptive-lighting
+
+Start to reconstruct color and brightness calculation methods for getting a more natural light transition behaviour.
+
+Changes will be:
+Color rendering, adding capability to render golden hour (between and blue hour light changes.
+
+Brightness rendering:
+transition according to the sun elevation, with adding a variable for the impact of the landscape horizon (0-10 degree). Instead of having max brightness with sunrise, max brightness will be reached after the sun reaches a definable elevation like 6 degree above the theoretical horizon. Vice versa for Sunset.
+
+Also transition from and to min brightness will be aligned to the natural twilight behaviour.
+Twilight behaviour can vary between civil (between -6 and 0 degree), nautical (between -6 and -12 degree) and astronomical twilight (between -12 and -18 degree)
 
 ![](https://github.com/home-assistant/brands/raw/b4a168b9af282ef916e120d31091ecd5e3c35e66/core_integrations/adaptive_lighting/icon.png)
 
