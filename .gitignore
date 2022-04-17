@@ -151,3 +151,6 @@ blueprints
 deps
 tts
 
+home-assistant.log.fault
+home-assistant_v2.db-shm
+home-assistant_v2.db-wal
