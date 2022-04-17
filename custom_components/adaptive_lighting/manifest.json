@@ -1,11 +1,11 @@
 {
   "domain": "adaptive_lighting",
-  "name": "Adaptive Lighting",
-  "documentation": "https://github.com/basnijholt/adaptive-lighting#readme",
-  "issue_tracker": "https://github.com/basnijholt/adaptive-lighting/issues",
+  "name": "Natural Adaptive Lighting",
+  "documentation": "https://github.com/tlachmann/natural-adaptive-lighting#readme",
+  "issue_tracker": "https://github.com/tlachmann/natural-adaptive-lighting/issues",
   "config_flow": true,
   "dependencies": [],
-  "codeowners": ["@basnijholt", "@RubenKelevra"],
+  "codeowners": ["@tlachmann"],
   "version": "1.0.14",
   "requirements": [],
   "iot_class": "calculated"
