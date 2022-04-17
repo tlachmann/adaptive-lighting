@@ -130,3 +130,9 @@ dmypy.json
 *.DS_Store
 *.syncfolderspro
 *_DelSyncFiles
+bin/
+lib/
+config/
+include/
+share/
+pyvenv.cfg
