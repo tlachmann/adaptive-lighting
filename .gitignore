@@ -128,11 +128,23 @@ dmypy.json
 # Pyre type checker
 .pyre/
 *.DS_Store
-*.syncfolderspro
-*_DelSyncFiles
+
 bin/
 lib/
 config/
 include/
 share/
 pyvenv.cfg
+automations.yaml
+.HA_VERSION
+.storage/auth
+*.homeassistant
+secrets.yaml
+scripts.yaml
+scenes.yaml
+home-assistant_v2.db
+home-assistant.log.1
+configuration.yaml
+.storage
+blueprints
+
