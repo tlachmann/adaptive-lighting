@@ -147,4 +147,7 @@ home-assistant.log.1
 configuration.yaml
 .storage
 blueprints
+.cloud
+deps
+tts
 
