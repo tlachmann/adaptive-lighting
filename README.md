@@ -14,6 +14,35 @@ transition according to the sun elevation, with adding a variable for the impact
 Also transition from and to min brightness will be aligned to the natural twilight behaviour.
 Twilight behaviour can vary between civil (between -6 and 0 degree), nautical (between -6 and -12 degree) and astronomical twilight (between -12 and -18 degree)
 
+
+
+
+option to enable and set colortemp for morning and/or evening blue hour (astral.sun.blue_hour())
+option to enable and set colortemp for morning and/or evening golden hour (astral.sun.golden_hour())
+
+option to enable and set elevation for brightness impact of landsacpe horizon astral.sun.time_at_elevation()
+
+option to enable morning and/or evening brightness transition based on Twilight (dawn/dusk) astral.sun.twilight() resp. astral.sun.dusk() and astral.sun.dawn()
+
+option to set the brightnesst impact for twilight behavior by Astral.solar_depression
+
+
+
+option to use sleep settings for night light condition astral.sun.night() and allow to use colortemp or RGB vor color value 
+
+
+
+
+
+
+
+
+
+
+
+
+###########
+
 ![](https://github.com/home-assistant/brands/raw/b4a168b9af282ef916e120d31091ecd5e3c35e66/core_integrations/adaptive_lighting/icon.png)
 
 _Try out this code by adding https://github.com/basnijholt/adaptive-lighting to your custom repos in [HACS (Home Assistant Community Store)](https://hacs.xyz/) and install it!_
