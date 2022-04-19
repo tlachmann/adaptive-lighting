@@ -10,9 +10,6 @@ DOMAIN = "adaptive_lighting"
 SUN_EVENT_NOON = "solar_noon"
 SUN_EVENT_MIDNIGHT = "solar_midnight"
 
-SUN_EVENT_DAWN = "dawn"
-SUN_EVENT_DUSK = "dusk"
-
 CONF_NAME, DEFAULT_NAME = "name", "default"
 CONF_LIGHTS, DEFAULT_LIGHTS = "lights", []
 CONF_DETECT_NON_HA_CHANGES, DEFAULT_DETECT_NON_HA_CHANGES = (
@@ -41,11 +38,14 @@ CONF_SUNSET_TIME = "sunset_time"
 CONF_TAKE_OVER_CONTROL, DEFAULT_TAKE_OVER_CONTROL = "take_over_control", True
 CONF_TRANSITION, DEFAULT_TRANSITION = "transition", 45
 
+######### Natural change addition #########
+SUN_EVENT_DAWN = "dawn"
+SUN_EVENT_DUSK = "dusk"
 CONF_DAWN_COLOR_TEMP, DEFAULT_DAWN_COLOR_TEMP = "dawn_color_temp", 6500
 CONF_DUSK_COLOR_TEMP, DEFAULT_DUSK_COLOR_TEMP = "dusk_color_temp", 5000
 CONF_SUNRISE_COLOR_TEMP, DEFAULT_SUNRISE_COLOR_TEMP = "sunrise_color_temp", 3000
 CONF_SUNSET_COLOR_TEMP, DEFAULT_SUNSET_COLOR_TEMP = "sunset_color_temp", 2500
-
+######### Natural change addition #########
 
 SLEEP_MODE_SWITCH = "sleep_mode_switch"
 ADAPT_COLOR_SWITCH = "adapt_color_switch"

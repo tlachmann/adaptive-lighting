@@ -76,7 +76,7 @@ def validate_options(user_input, errors):
 class OptionsFlowHandler(config_entries.OptionsFlow):
     """Handle a option flow for Adaptive Lighting."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry):
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize options flow."""
         self.config_entry = config_entry
 
