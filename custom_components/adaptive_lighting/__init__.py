@@ -35,7 +35,7 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-
+########  First - Async import config data  ########
 async def async_setup(hass: HomeAssistant, config: dict[str, Any]):
     """Import integration from config."""
 
@@ -49,6 +49,7 @@ async def async_setup(hass: HomeAssistant, config: dict[str, Any]):
     return True
 
 
+########  second - Async setup integration component  ########
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     """Set up the component."""
     data = hass.data.setdefault(DOMAIN, {})
@@ -63,11 +64,13 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     return True
 
 
+########  Subroutine of Async setup integration component  ########
 async def async_update_options(hass, config_entry: ConfigEntry):
     """Update options."""
     await hass.config_entries.async_reload(config_entry.entry_id)
 
 
+########  unload integration component  ########
 async def async_unload_entry(hass, config_entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_forward_entry_unload(

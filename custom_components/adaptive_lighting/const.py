@@ -39,12 +39,38 @@ CONF_TAKE_OVER_CONTROL, DEFAULT_TAKE_OVER_CONTROL = "take_over_control", True
 CONF_TRANSITION, DEFAULT_TRANSITION = "transition", 45
 
 ######### Natural change addition #########
-SUN_EVENT_DAWN = "dawn"
-SUN_EVENT_DUSK = "dusk"
-CONF_DAWN_COLOR_TEMP, DEFAULT_DAWN_COLOR_TEMP = "dawn_color_temp", 6500
-CONF_DUSK_COLOR_TEMP, DEFAULT_DUSK_COLOR_TEMP = "dusk_color_temp", 5000
+
+# As documented in wikipedia: https://en.wikipedia.org/wiki/Twilight
+# sun is:
+## values for brightness rendering
+# STAGE_ASTRONOMICAL_TWILIGHT = "18"  # -18° to -12° - some stars not visible
+# STAGE_NAUTICAL_TWILIGHT = "12"  # -12° to -6° - horizon visible
+# STAGE_CIVIL_TWILIGHT = "6"  # -6° to -12° - objects visible
+
+CONF_LANDSCAPE_HORIZON, DEFAULT_LANDSCAPE_HORIZON = (
+    "landsacpe_horizon",
+    4,
+)  # additional value to extend sunlight brightness transistion above horizon.
+CONF_TWILIGHT_STAGE, DEFAULT_TWILIGHT_STAGE = (
+    "twilight_stage",
+    6,
+)  # defines the twilight stage when night ends and dawn begins (civil:-6, astornomical:-12, nautical:-18)
+
+CONF_DAWN_COLOR_TEMP, DEFAULT_DAWN_COLOR_TEMP = (
+    "dawn_color_temp",
+    6500,
+)  # defines the colortemp at beginning of dawn
+CONF_DUSK_COLOR_TEMP, DEFAULT_DUSK_COLOR_TEMP = (
+    "dusk_color_temp",
+    5000,
+)  # defines the colortemp at the end of dawn
+
 CONF_SUNRISE_COLOR_TEMP, DEFAULT_SUNRISE_COLOR_TEMP = "sunrise_color_temp", 3000
-CONF_SUNSET_COLOR_TEMP, DEFAULT_SUNSET_COLOR_TEMP = "sunset_color_temp", 2500
+CONF_SUNSET_COLOR_TEMP, DEFAULT_SUNSET_COLOR_TEMP = "sunset_color_temp", 2500  #
+CONF_NIGHT_COLOR, DEFAULT_NIGHT_COLOR = "night_color", (0, 0, 255)
+# Defines Blue color as night light
+
+
 ######### Natural change addition #########
 
 SLEEP_MODE_SWITCH = "sleep_mode_switch"
@@ -94,6 +120,9 @@ VALIDATION_TUPLES = [
     (CONF_TAKE_OVER_CONTROL, DEFAULT_TAKE_OVER_CONTROL, bool),
     (CONF_DETECT_NON_HA_CHANGES, DEFAULT_DETECT_NON_HA_CHANGES, bool),
     (CONF_SEPARATE_TURN_ON_COMMANDS, DEFAULT_SEPARATE_TURN_ON_COMMANDS, bool),
+    (CONF_NIGHT_COLOR, DEFAULT_NIGHT_COLOR, str),
+    (CONF_LANDSCAPE_HORIZON, DEFAULT_LANDSCAPE_HORIZON, int),
+    (CONF_TWILIGHT_STAGE, DEFAULT_TWILIGHT_STAGE, int),
 ]
 
 

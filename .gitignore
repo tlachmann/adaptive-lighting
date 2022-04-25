@@ -154,3 +154,7 @@ tts
 home-assistant.log.fault
 home-assistant_v2.db-shm
 home-assistant_v2.db-wal
+custom_components/adaptive_lighting/astraltest.py
+custom_components/adaptive_lighting/date_time.py.swift
+custom_components/adaptive_lighting/Notes.txt
+custom_components/adaptive_lighting/test.py
