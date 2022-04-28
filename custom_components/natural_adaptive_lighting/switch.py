@@ -199,7 +199,7 @@ BRIGHTNESS_ATTRS = {
 }
 
 # Keep a short domain version for the context instances (which can only be 36 chars)
-_DOMAIN_SHORT = "adapt_lgt"
+_DOMAIN_SHORT = "n_adapt_lgt"
 
 
 def _short_hash(string: str, length: int = 4) -> str:
