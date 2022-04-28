@@ -159,3 +159,8 @@ custom_components/adaptive_lighting/date_time.py.swift
 custom_components/adaptive_lighting/Notes.txt
 custom_components/adaptive_lighting/test.py
 custom_components/adaptive_lighting/test_bright.py
+custom_components/natural_adaptive_lighting/Notes.txt
+custom_components/natural_adaptive_lighting/test.py
+custom_components/natural_adaptive_lighting/test_bright.py
+custom_components/natural_adaptive_lighting/astraltest.py
+custom_components/natural_adaptive_lighting/date_time.py.swift
