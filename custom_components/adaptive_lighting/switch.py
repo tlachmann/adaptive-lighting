@@ -1,4 +1,4 @@
-"""Switch for the Adaptive Lighting integration."""
+"""Switch for the Natural Adaptive Lighting integration."""
 from __future__ import annotations
 from time import perf_counter
 
@@ -257,7 +257,7 @@ async def handle_apply(switch: AdaptiveSwitch, service_call: ServiceCall):
     all_lights = _expand_light_groups(hass, all_lights)
     switch.turn_on_off_listener.lights.update(all_lights)
     _LOGGER.debug(
-        "Called 'adaptive_lighting.apply' service with '%s'",
+        "Called 'natural_adaptive_lighting.apply' service with '%s'",
         data,
     )
     for light in all_lights:
@@ -281,7 +281,7 @@ async def handle_set_manual_control(switch: AdaptiveSwitch, service_call: Servic
     else:
         all_lights = _expand_light_groups(switch.hass, lights)
     _LOGGER.debug(
-        "Called 'adaptive_lighting.set_manual_control' service with '%s'",
+        "Called 'natural_adaptive_lighting.set_manual_control' service with '%s'",
         service_call.data,
     )
     if service_call.data[CONF_MANUAL_CONTROL]:
@@ -309,7 +309,7 @@ def _fire_manual_control_event(
     hass = switch.hass
     fire = hass.bus.async_fire if is_async else hass.bus.fire
     _LOGGER.debug(
-        "'adaptive_lighting.manual_control' event fired for %s for light %s",
+        "'natural_adaptive_lighting.manual_control' event fired for %s for light %s",
         switch.entity_id,
         light,
     )
@@ -578,7 +578,7 @@ def _attributes_have_changed(
 
 
 class AdaptiveSwitch(SwitchEntity, RestoreEntity):
-    """Representation of a Adaptive Lighting switch."""
+    """Representation of a Natural Adaptive Lighting switch."""
 
     def __init__(
         self,
@@ -590,7 +590,7 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
         adapt_brightness_switch: SimpleSwitch,
         loc,
     ):
-        """Initialize the Adaptive Lighting switch."""
+        """Initialize the Natural Adaptive Lighting switch."""
         self.hass = hass
         self.turn_on_off_listener = turn_on_off_listener
         self.sleep_mode_switch = sleep_mode_switch
@@ -673,7 +673,7 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
     @property
     def name(self):
         """Return the name of the device if any."""
-        return f"Adaptive Lighting: {self._name}"
+        return f"Natural Adaptive Lighting: {self._name}"
 
     @property
     def unique_id(self):
@@ -682,7 +682,7 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
 
     @property
     def is_on(self) -> Optional[bool]:
-        """Return true if adaptive lighting is on."""
+        """Return true if natural natural adaptive lighting is on."""
         return self._state
 
     async def async_added_to_hass(self) -> None:
@@ -766,7 +766,7 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
     def create_context(
         self, which: str = "default", parent: Optional[Context] = None
     ) -> Context:
-        """Create a context that identifies this Adaptive Lighting instance."""
+        """Create a context that identifies this Natural Adaptive Lighting instance."""
         # Right now the highest number of each context_id it can create is
         # 'adapt_lgt_XXXX_turn_on_9999999999999'
         # 'adapt_lgt_XXXX_interval_999999999999'
@@ -782,7 +782,7 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
     async def async_turn_on(  # pylint: disable=arguments-differ
         self, adapt_lights: bool = True
     ) -> None:
-        """Turn on adaptive lighting."""
+        """Turn on natural natural adaptive lighting."""
         _LOGGER.debug(
             "%s: Called 'async_turn_on', current state is '%s'", self._name, self._state
         )
@@ -800,7 +800,7 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
             )
 
     async def async_turn_off(self, **kwargs) -> None:
-        """Turn off adaptive lighting."""
+        """Turn off natural natural adaptive lighting."""
         if not self.is_on:
             return
         self._state = False
@@ -936,8 +936,6 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
         self._settings = self._sun_light_settings.get_settings(
             self.sleep_mode_switch.is_on, transition
         )
-        # print("_settings: " + str(self._settings))
-        # self.as
         if lights is None:
             lights = self._lights
         if (self._only_once and not force) or not lights:
@@ -1055,12 +1053,12 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
 
 
 class SimpleSwitch(SwitchEntity, RestoreEntity):
-    """Representation of a Adaptive Lighting switch."""
+    """Representation of a Natural Adaptive Lighting switch."""
 
     def __init__(
         self, which: str, initial_state: bool, hass: HomeAssistant, config_entry
     ):
-        """Initialize the Adaptive Lighting switch."""
+        """Initialize the Natural Adaptive Lighting switch."""
         self.hass = hass
         data = validate(config_entry)
         self._icon = ICON
@@ -1068,7 +1066,7 @@ class SimpleSwitch(SwitchEntity, RestoreEntity):
         self._which = which
         name = data[CONF_NAME]
         self._unique_id = f"{name}_{slugify(self._which)}"
-        self._name = f"Adaptive Lighting {which}: {name}"
+        self._name = f"Natural Adaptive Lighting {which}: {name}"
         self._initial_state = initial_state
 
     @property
@@ -1088,7 +1086,7 @@ class SimpleSwitch(SwitchEntity, RestoreEntity):
 
     @property
     def is_on(self) -> Optional[bool]:
-        """Return true if adaptive lighting is on."""
+        """Return true if natural natural adaptive lighting is on."""
         return self._state
 
     # register adaptive light switches to Hass using last state.
@@ -1104,11 +1102,11 @@ class SimpleSwitch(SwitchEntity, RestoreEntity):
             await self.async_turn_off()
 
     async def async_turn_on(self, **kwargs) -> None:
-        """Turn on adaptive lighting sleep mode."""
+        """Turn on natural natural adaptive lighting sleep mode."""
         self._state = True
 
     async def async_turn_off(self, **kwargs) -> None:
-        """Turn off adaptive lighting sleep mode."""
+        """Turn off natural natural adaptive lighting sleep mode."""
         self._state = False
 
 
@@ -1136,7 +1134,6 @@ class SunSettings:
 
     def get_sun_events(self, date: datetime.datetime) -> dict[str, float]:
         """Get the four sun event's timestamps at 'date'."""
-
         # This function is called three times, for yesterday, today and tomorrow for the current date each interval
 
         def _replace_time(date: datetime.datetime, key: str) -> datetime.datetime:
@@ -1285,7 +1282,7 @@ class SunSettings:
         if events_names not in _ALLOWED_ORDERS:
             msg = (
                 "{self.name}: The sun events {events_names} are not in the expected"
-                " order. The Adaptive Lighting integration will not work!"
+                " order. The Natural Adaptive Lighting integration will not work!"
                 " This might happen if your sunrise/sunset offset is too large or"
                 " your manually set sunrise/sunset time is past/before noon/midnight."
             )
@@ -1328,7 +1325,7 @@ class SunSettings:
         return percentage
 
     def calc_pct(self, val1, val2, val3, val4) -> float:
-        """subfunction for calc pct"""
+        """subfunction for calc pct."""
         pct = (math.pow((val1 - val2) / (val3 - val4), 2)) / 2
         return pct
 
@@ -1341,30 +1338,32 @@ class SunSettings:
         self.get_sun_events(now)
         delta_brightness = self.max_brightness - self.min_brightness
         if self.horizon:
-            SunSettings.daylight_strt = SunSettings.lscpe_hrzn_mrng
-        if self.horizon:
-            SunSettings.daylight_end = SunSettings.lscpe_hrzn_eve
+            sunrise = SunSettings.lscpe_hrzn_mrng
+            sunset = SunSettings.lscpe_hrzn_eve
+        else:
+            sunrise = SunSettings.daylight_strt
+            sunset = SunSettings.daylight_end
 
-        if SunSettings.daylight_strt < now < SunSettings.daylight_end:
+        if sunrise < now < sunset:
             return self.max_brightness
 
-        elif SunSettings.dawn < now < SunSettings.daylight_strt:
+        if SunSettings.dawn < now < sunrise:
             # brightness transistion morning
             morning_pct = self.calc_pct(
                 now,
                 SunSettings.dawn,
-                SunSettings.daylight_strt,
+                sunrise,
                 SunSettings.dawn,
             )
             perct = (delta_brightness * morning_pct) + self.min_brightness
             return perct
 
-        elif SunSettings.daylight_end < now < SunSettings.dusk:
+        if sunset < now < SunSettings.dusk:
             # brightness transistion evening
             evening_pct = self.calc_pct(
                 SunSettings.dusk,
                 now,
-                SunSettings.daylight_end,
+                sunset,
                 SunSettings.dusk,
             )
             perct = (delta_brightness * evening_pct) + self.min_brightness
@@ -1406,8 +1405,10 @@ class SunSettings:
         xy_color = tuple(map(int, xy_color))
         hs_color: tuple[float, float] = color_xy_to_hs(*xy_color)
         hs_color = tuple(map(int, hs_color))
+
         _LOGGER.info(
-            "Calculating... SunPosition:'%s', Brightness:'%s', color_temp_kelvin='%s', color_temp_mired='%s', rgb_color='%s'",
+            "'%s': Calculating... SunPosition:'%s', Brightness:'%s', color_temp_kelvin='%s', color_temp_mired='%s', rgb_color='%s'",
+            self.name,
             percent,
             brightness_pct,
             color_temp_kelvin,
@@ -1579,12 +1580,12 @@ class TurnOnOffListener:
                 adapt_brightness and BRIGHTNESS_ATTRS.intersection(keys)
             ):
                 # Light was already on and 'light.turn_on' was not called by
-                # the adaptive_lighting integration.
+                # the natural_adaptive_lighting integration.
                 manual_control = self.manual_control[light] = True
                 _fire_manual_control_event(switch, light, turn_on_event.context)
                 _LOGGER.debug(
                     "'%s' was already on and 'light.turn_on' was not called by the"
-                    " adaptive_lighting integration (context.id='%s'), the Adaptive"
+                    " natural_adaptive_lighting integration (context.id='%s'), the Adaptive"
                     " Lighting will stop adapting the light until the switch or the"
                     " light turns off and then on again",
                     light,

@@ -1,4 +1,4 @@
-"""Constants for the Adaptive Lighting integration."""
+"""Constants for the Natural Adaptive Lighting integration."""
 import voluptuous as vol
 
 from homeassistant.components.light import VALID_TRANSITION
@@ -6,7 +6,7 @@ import homeassistant.helpers.config_validation as cv
 
 ICON = "mdi:theme-light-dark"
 
-DOMAIN = "adaptive_lighting"
+DOMAIN = "natural_adaptive_lighting"
 SUN_EVENT_NOON = "solar_noon"
 SUN_EVENT_MIDNIGHT = "solar_midnight"
 

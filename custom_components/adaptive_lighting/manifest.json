@@ -1,6 +1,6 @@
 {
-  "domain": "adaptive_lighting",
-  "name": "Natural Adaptive Lighting",
+  "domain": "natural_adaptive_lighting",
+  "name": "Natural Adaptive Lightning",
   "documentation": "https://github.com/tlachmann/natural-adaptive-lighting#readme",
   "issue_tracker": "https://github.com/tlachmann/natural-adaptive-lighting/issues",
   "config_flow": true,

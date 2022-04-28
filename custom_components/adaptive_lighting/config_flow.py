@@ -1,4 +1,4 @@
-"""Config flow for Adaptive Lighting integration."""
+"""Config flow for Natural Adaptive Lighting integration."""
 import logging
 
 import voluptuous as vol
@@ -21,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Adaptive Lighting."""
+    """Handle a config flow for Natural Adaptive Lighting."""
 
     VERSION = 1
 
@@ -74,7 +74,7 @@ def validate_options(user_input, errors):
 
 
 class OptionsFlowHandler(config_entries.OptionsFlow):
-    """Handle a option flow for Adaptive Lighting."""
+    """Handle a option flow for Natural Adaptive Lighting."""
 
     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize options flow."""
