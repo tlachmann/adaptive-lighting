@@ -16,6 +16,7 @@ import math
 from typing import Any, Optional, Union
 
 import astral
+import pytz
 
 # from astral import SunDirection
 
@@ -619,7 +620,7 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
         # tz = self.hass.config.time_zone
         # observer = astral.Observer(lat, lon, elev)
 
-        self._sun_light_settings = SunLightSettings(
+        self._sun_light_settings = SunSettings(
             name=self._name,
             astral_location=a_location,
             elevation_observer=obs_elevation,
@@ -635,7 +636,7 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
             sunset_time=data[CONF_SUNSET_TIME],
             time_zone=self.hass.config.time_zone,
             transition=data[CONF_TRANSITION],
-            direction=data[CONF_TWILIGHT_STAGE],
+            depression=data[CONF_TWILIGHT_STAGE],
             horizon=data[CONF_LANDSCAPE_HORIZON],
         )
 
@@ -1112,8 +1113,8 @@ class SimpleSwitch(SwitchEntity, RestoreEntity):
 
 
 @dataclass(frozen=True)
-class SunLightSettings:
-    """Track the state of the sun and associated light settings."""
+class SunSettings:
+    """Sunlight Settings: Track the state of the sun and associated light settings."""
 
     name: str
     astral_location: astral.location
@@ -1130,7 +1131,7 @@ class SunLightSettings:
     sunset_time: Optional[datetime.time]
     time_zone: datetime.tzinfo
     transition: int
-    direction: str
+    depression: str
     horizon: float
 
     def get_sun_events(self, date: datetime.datetime) -> dict[str, float]:
@@ -1150,12 +1151,8 @@ class SunLightSettings:
             return utc_time
 
         location = self.astral_location
-        location.solar_depression = self.direction
 
-        rising = astral.SunDirection.RISING
-        setting = astral.SunDirection.SETTING
-
-        # get sunrise time
+        # Old values for Rendering ( implementation of custom sunrise_time / sunset_time and Offsets in new method needed. )
         sunrise = (
             location.sunrise(
                 date, local=False, observer_elevation=self.elevation_observer
@@ -1163,8 +1160,6 @@ class SunLightSettings:
             if self.sunrise_time is None
             else _replace_time(date, "sunrise")
         ) + self.sunrise_offset
-
-        # get sunset time
         sunset = (
             location.sunset(
                 date, local=False, observer_elevation=self.elevation_observer
@@ -1172,11 +1167,8 @@ class SunLightSettings:
             if self.sunset_time is None
             else _replace_time(date, "sunset")
         ) + self.sunset_offset
-
-        SunLightSettings.solar_noon = location.noon(date, local=False)
-        solar_noon = SunLightSettings.solar_noon
-        SunLightSettings.solar_midnight = location.midnight(date, local=False)
-        solar_midnight = SunLightSettings.solar_midnight
+        solar_noon = location.noon(date, local=False)
+        solar_midnight = location.midnight(date, local=False)
 
         # if date < solar_noon:
         #     sun_direction = rising
@@ -1184,35 +1176,54 @@ class SunLightSettings:
         #     sun_direction = setting
         # print(sun_direction)
 
-        (
-            SunLightSettings.daylight_start,
-            SunLightSettings.daylight_end,
-        ) = location.daylight(date, local=False)
-        (SunLightSettings.night_start, SunLightSettings.night_end) = location.night(
+        # Preperation for fetching Sun Values
+
+        location.solar_depression = self.depression
+        rising = astral.SunDirection.RISING
+        setting = astral.SunDirection.SETTING
+
+        # New Values for Brightness render
+
+        SunSettings.dawn = location.dawn(
+            date, local=False, observer_elevation=self.elevation_observer
+        )
+        SunSettings.dusk = location.dusk(
+            date, local=False, observer_elevation=self.elevation_observer
+        )
+
+        SunSettings.lscpe_hrzn_mrng = location.time_at_elevation(
+            self.horizon, date, rising, local=False
+        )
+        SunSettings.lscpe_hrzn_eve = location.time_at_elevation(
+            self.horizon, date, setting, local=False
+        )
+        (SunSettings.daylight_strt, SunSettings.daylight_end) = location.daylight(
             date, local=False
         )
 
+        (SunSettings.night_strt, SunSettings.night_end) = location.night(
+            date, local=False
+        )
+
+        # Color Render Values
         (
-            SunLightSettings.blue_hour_morning_start,
-            SunLightSettings.blue_hour_morning_end,
+            SunSettings.bl_hr_mrnng_strt,
+            SunSettings.bl_hr_mrnng_end,
         ) = location.blue_hour(
             rising,
             date,
             local=False,
             observer_elevation=self.elevation_observer,
         )
-        (
-            SunLightSettings.blue_hour_night_start,
-            SunLightSettings.blue_hour_night_end,
-        ) = location.blue_hour(
+        (SunSettings.bl_hr_nght_strt, SunSettings.bl_hr_nght_end,) = location.blue_hour(
             setting,
             date,
             local=False,
             observer_elevation=self.elevation_observer,
         )
         (
-            SunLightSettings.golden_hour_morning_start,
-            SunLightSettings.golden_hour_morning_end,
+            SunSettings.gldn_hr_mrnng_strt,
+            SunSettings.gldn_hr_mrnng_end,
         ) = location.golden_hour(
             rising,
             date,
@@ -1220,60 +1231,46 @@ class SunLightSettings:
             observer_elevation=self.elevation_observer,
         )
         (
-            SunLightSettings.golden_hour_night_start,
-            SunLightSettings.golden_hour_night_end,
+            SunSettings.gldn_hr_nght_strt,
+            SunSettings.gldn_hr_nght_end,
         ) = location.golden_hour(
             setting,
             date,
             local=False,
             observer_elevation=self.elevation_observer,
-        )
-
-        SunLightSettings.dawn = location.dawn(
-            date, local=False, observer_elevation=self.elevation_observer
-        )
-        SunLightSettings.dusk = location.dusk(
-            date, local=False, observer_elevation=self.elevation_observer
-        )
-
-        SunLightSettings.landsacpe_horizon_morning = location.time_at_elevation(
-            self.horizon, date, rising, local=False
-        )
-        SunLightSettings.landsacpe_horizon_evening = location.time_at_elevation(
-            self.horizon, date, setting, local=False
         )
 
         # print(
-        #     "blue_hour_morning_start: "
-        #     + str(blue_hour_morning_start)
+        #     "bl_hr_mrnng_strt: "
+        #     + str(bl_hr_mrnng_strt)
         #     + "\n"
-        #     + "blue_hour_morning_end: "
-        #     + str(blue_hour_morning_end)
+        #     + "bl_hr_mrnng_end: "
+        #     + str(bl_hr_mrnng_end)
         # )
         # print(
-        #     "golden_hour_morning_start: "
-        #     + str(golden_hour_morning_start)
+        #     "gldn_hr_mrnng_strt: "
+        #     + str(gldn_hr_mrnng_strt)
         #     + "\n"
-        #     + "golden_hour_morning_end: "
-        #     + str(golden_hour_morning_end)
+        #     + "gldn_hr_mrnng_end: "
+        #     + str(gldn_hr_mrnng_end)
         # )
         # print("SUNRISE: " + str(sunrise))
 
         # print("SUNSET: " + str(sunset))
 
         # print(
-        #     "golden_hour_night_start: "
-        #     + str(golden_hour_night_start)
+        #     "gldn_hr_nght_strt: "
+        #     + str(gldn_hr_nght_strt)
         #     + "\n"
-        #     + "golden_hour_night_end: "
-        #     + str(golden_hour_night_end)
+        #     + "gldn_hr_nght_end: "
+        #     + str(gldn_hr_nght_end)
         # )
         # print(
-        #     "blue_hour_night_start: "
-        #     + str(blue_hour_night_start)
+        #     "bl_hr_nght_strt: "
+        #     + str(bl_hr_nght_strt)
         #     + "\n"
-        #     + "blue_hour_night_end: "
-        #     + str(blue_hour_night_end)
+        #     + "bl_hr_nght_end: "
+        #     + str(bl_hr_nght_end)
         # )
 
         events = [
@@ -1314,6 +1311,7 @@ class SunLightSettings:
     def calc_percent(self, transition: int) -> float:
         """Calculate the position of the sun in %."""
         now = dt_util.utcnow()
+        now = now.replace(tzinfo=pytz.utc)
         # print("now: " + str(now))
         target_time = now + timedelta(seconds=transition)
         target_ts = target_time.timestamp()
@@ -1331,7 +1329,7 @@ class SunLightSettings:
 
     def calc_pct(self, val1, val2, val3, val4) -> float:
         """subfunction for calc pct"""
-        pct = (val1 - val2) / (val3 - val4)
+        pct = (math.pow((val1 - val2) / (val3 - val4), 2)) / 2
         return pct
 
     def calc_brightness_pct(self, is_sleep: bool) -> float:
@@ -1339,43 +1337,39 @@ class SunLightSettings:
         if is_sleep:
             return self.sleep_brightness
         now = dt_util.utcnow()
+        now = now.replace(tzinfo=pytz.utc)
         self.get_sun_events(now)
         delta_brightness = self.max_brightness - self.min_brightness
         if self.horizon:
-            SunLightSettings.daylight_start = SunLightSettings.landsacpe_horizon_morning
+            SunSettings.daylight_strt = SunSettings.lscpe_hrzn_mrng
         if self.horizon:
-            SunLightSettings.daylight_end = SunLightSettings.landsacpe_horizon_evening
+            SunSettings.daylight_end = SunSettings.lscpe_hrzn_eve
 
-        if SunLightSettings.daylight_start < now < SunLightSettings.daylight_end:
-            # daylight brightness max_brightness
+        if SunSettings.daylight_strt < now < SunSettings.daylight_end:
             return self.max_brightness
 
-        elif SunLightSettings.dawn < now < SunLightSettings.daylight_start:
+        elif SunSettings.dawn < now < SunSettings.daylight_strt:
             # brightness transistion morning
-            morning_pct = abs(
-                self.calc_pct(
-                    now,
-                    SunLightSettings.dawn,
-                    SunLightSettings.dawn,
-                    SunLightSettings.daylight_start,
-                )
+            morning_pct = self.calc_pct(
+                now,
+                SunSettings.dawn,
+                SunSettings.daylight_strt,
+                SunSettings.dawn,
             )
-            return (delta_brightness * morning_pct) + self.min_brightness
+            perct = (delta_brightness * morning_pct) + self.min_brightness
+            return perct
 
-        elif SunLightSettings.daylight_end < now < SunLightSettings.dusk:
+        elif SunSettings.daylight_end < now < SunSettings.dusk:
             # brightness transistion evening
-            evening_pct = 1 - (
-                self.calc_pct(
-                    SunLightSettings.daylight_end,
-                    now,
-                    SunLightSettings.daylight_end,
-                    SunLightSettings.dusk,
-                )
+            evening_pct = self.calc_pct(
+                SunSettings.dusk,
+                now,
+                SunSettings.daylight_end,
+                SunSettings.dusk,
             )
-            return (delta_brightness * evening_pct) + self.min_brightness
-
+            perct = (delta_brightness * evening_pct) + self.min_brightness
+            return perct
         else:
-            # night brightness min_brightness
             return self.min_brightness
 
     def calc_color_temp_kelvin(self, percent: float, is_sleep: bool) -> float:
@@ -1394,7 +1388,7 @@ class SunLightSettings:
 
         Calculating all values takes <0.5ms.
         """
-        t1_start = perf_counter()
+        t1_strt = perf_counter()
         percent = (
             self.calc_percent(transition)
             if transition is not None
@@ -1423,7 +1417,7 @@ class SunLightSettings:
         t1_stop = perf_counter()
         print(
             "Elapsed time during the whole program in seconds:",
-            (t1_stop - t1_start),
+            (t1_stop - t1_strt),
         )
         return {
             "brightness_pct": brightness_pct,

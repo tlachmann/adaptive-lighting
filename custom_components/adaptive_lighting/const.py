@@ -38,18 +38,14 @@ CONF_SUNSET_TIME = "sunset_time"
 CONF_TAKE_OVER_CONTROL, DEFAULT_TAKE_OVER_CONTROL = "take_over_control", True
 CONF_TRANSITION, DEFAULT_TRANSITION = "transition", 45
 
-######### Natural change addition #########
+######### BEGIN Natural change addition #########
 
 # As documented in wikipedia: https://en.wikipedia.org/wiki/Twilight
 # sun is:
 ## values for brightness rendering
-# STAGE_ASTRONOMICAL_TWILIGHT = "18"  # -18° to -12° - some stars not visible
-# STAGE_NAUTICAL_TWILIGHT = "12"  # -12° to -6° - horizon visible
-# STAGE_CIVIL_TWILIGHT = "6"  # -6° to -12° - objects visible
-
 CONF_LANDSCAPE_HORIZON, DEFAULT_LANDSCAPE_HORIZON = (
     "landsacpe_horizon",
-    4,
+    0,
 )  # additional value to extend sunlight brightness transistion above horizon.
 CONF_TWILIGHT_STAGE, DEFAULT_TWILIGHT_STAGE = (
     "twilight_stage",
@@ -67,11 +63,11 @@ CONF_DUSK_COLOR_TEMP, DEFAULT_DUSK_COLOR_TEMP = (
 
 CONF_SUNRISE_COLOR_TEMP, DEFAULT_SUNRISE_COLOR_TEMP = "sunrise_color_temp", 3000
 CONF_SUNSET_COLOR_TEMP, DEFAULT_SUNSET_COLOR_TEMP = "sunset_color_temp", 2500  #
-CONF_NIGHT_COLOR, DEFAULT_NIGHT_COLOR = "night_color", (0, 0, 255)
+CONF_NIGHT_COLOR, DEFAULT_NIGHT_COLOR = "night_color", "(0, 0, 255)"
 # Defines Blue color as night light
 
 
-######### Natural change addition #########
+######### Natural change addition END #########
 
 SLEEP_MODE_SWITCH = "sleep_mode_switch"
 ADAPT_COLOR_SWITCH = "adapt_color_switch"
@@ -120,9 +116,11 @@ VALIDATION_TUPLES = [
     (CONF_TAKE_OVER_CONTROL, DEFAULT_TAKE_OVER_CONTROL, bool),
     (CONF_DETECT_NON_HA_CHANGES, DEFAULT_DETECT_NON_HA_CHANGES, bool),
     (CONF_SEPARATE_TURN_ON_COMMANDS, DEFAULT_SEPARATE_TURN_ON_COMMANDS, bool),
+    ######### BEGIN Natural change addition #########
     (CONF_NIGHT_COLOR, DEFAULT_NIGHT_COLOR, str),
     (CONF_LANDSCAPE_HORIZON, DEFAULT_LANDSCAPE_HORIZON, int),
     (CONF_TWILIGHT_STAGE, DEFAULT_TWILIGHT_STAGE, int),
+    ######### Natural change addition END #########
 ]
 
 
