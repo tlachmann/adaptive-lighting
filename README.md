@@ -1,7 +1,7 @@
 [![hacs_badge](https://img.shields.io/badge/HACS-Default-orange.svg)](https://github.com/custom-components/hacs)
 ![Version](https://img.shields.io/github/v/release/basnijholt/adaptive-lighting)
 
-# Natural Adaptive Lighting component for Home Assistant based on basnijholt/adaptive-lighting
+# Natural Adaptive Lighting component for Home Assistant based on basnijholt/adaptive-lighting https://github.com/basnijholt/adaptive-lighting
 
 Start to reconstruct color and brightness calculation methods for getting a more natural light transition behaviour.
 
