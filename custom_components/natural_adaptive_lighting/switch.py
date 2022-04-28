@@ -1326,7 +1326,7 @@ class SunSettings:
 
     def calc_pct(self, val1, val2, val3, val4) -> float:
         """subfunction for calc pct."""
-        pct = (math.pow((val1 - val2) / (val3 - val4), 2)) / 2
+        pct = math.pow((val1 - val2) / (val3 - val4), 2)
         return pct
 
     def calc_brightness_pct(self, is_sleep: bool) -> float:
@@ -1344,10 +1344,10 @@ class SunSettings:
             sunrise = SunSettings.daylight_strt
             sunset = SunSettings.daylight_end
 
-        if sunrise < now < sunset:
+        if sunrise <= now <= sunset:
             return self.max_brightness
 
-        if SunSettings.dawn < now < sunrise:
+        if SunSettings.dawn <= now <= sunrise:
             # brightness transistion morning
             morning_pct = self.calc_pct(
                 now,
@@ -1368,8 +1368,8 @@ class SunSettings:
             )
             perct = (delta_brightness * evening_pct) + self.min_brightness
             return perct
-        else:
-            return self.min_brightness
+
+        return self.min_brightness
 
     def calc_color_temp_kelvin(self, percent: float, is_sleep: bool) -> float:
         """Calculate the color temperature in Kelvin."""
