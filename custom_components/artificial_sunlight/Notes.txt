@@ -1,0 +1,71 @@
+start doker host for vsc: colima start
+
+
+Shell:
+hass -c ./config
+FAKETIME="-12h"
+FAKETIME="-12h x4"
+
+FAKETIME="@2022-04-25 01:30:00"
+FAKETIME="@2022-04-25 07:30:00"
+FAKETIME="@2022-04-25 14:30:00"
+FAKETIME="@2022-04-28 19:00:00"
+date
+
+hass --debug -c ./config
+
+
+Class SunlightSettings überarbeiten:
+    Aufteilen in Sunlight und LightParameter Class
+
+Variaben aus Klasse SunlightSettings als Objekt anlegen.
+
+SunlightSettings abholen, wenn sie benötigt werden und für den Durchlauf vorhalten
+
+
+Content of class SunlightSettings: _sun_light_settings: SunLightSettings(name='Natural', astral_location=, tz=Europe/Berlin, lat=49.64, lon=8.45, elevation_observer=75, max_brightness=100, max_color_temp=8000, min_brightness=1, min_color_temp=2000, sleep_brightness=1, sleep_color_temp=1000, sunrise_offset=datetime.timedelta(0), sunrise_time=None, sunset_offset=datetime.timedelta(0), sunset_time=None, time_zone='Europe/Berlin', transition=10.0)
+
+possibility to access sun data based on key name in _update_attrs_and_maybe_adapt_lights:  self._settings.get("brightness_pct")
+current content of _getsettings: _settings: {'brightness_pct': 100, 'color_temp_kelvin': 7255.512588020637, 'color_temp_mired': 137, 'rgb_color': (235, 238, 255), 'xy_color': (0, 0), 'hs_color': (225, 100), 'sun_position': 0.8759187646701061}
+
+
+astral -lat 49.64 -long 8.45 -elev 95
+
+tz=Europe/Berlin, lat=49.64, lon=8.45
+
+
+
+events: [[('solar_midnight', 1650583482.0), ('sunrise', 1650601115.585586), ('solar_noon', 1650626687.0), ('sunset', 1650652308.667758)], [('solar_midnight', 1650669871.0), ('sunrise', 1650687400.22965), ('solar_noon', 1650713075.0), ('sunset', 1650738801.28415)], [('solar_midnight', 1650756260.0), ('sunrise', 1650773685.875341), ('solar_noon', 1650799464.0), ('sunset', 1650825293.802018)]]
+sunrise time: 2022-04-24 04:14:45.875341+00:00
+events: [('solar_midnight', 1650583482.0), ('sunrise', 1650601115.585586), ('solar_noon', 1650626687.0), ('sunset', 1650652308.667758), ('solar_midnight', 1650669871.0), ('sunrise', 1650687400.22965), ('solar_noon', 1650713075.0), ('sunset', 1650738801.28415), ('solar_midnight', 1650756260.0), ('sunrise', 1650773685.875341), ('solar_noon', 1650799464.0), ('sunset', 1650825293.802018)]
+
+
+        t1_start = perf_counter()
+
+
+        t1_stop = perf_counter()
+        print(
+            "Elapsed time during the whole program in seconds:",
+            (t1_stop - t1_start) * 1000,
+        )
+
+Dawn (Astronomical)
+Dawn (Nautical)
+Dawn (Civil)         Twilight Start    Blue Hour Start
+Golden Hour Start                      Blue Hour End
+Sunrise              Twilight End
+Golden Hour End
+Noon
+Golden Hour Start
+Sunset               Twilight Start
+Golden Hour End                        Blue Hour Start
+Dusk (Civil)         Twilight End      Blue Hour End
+Dusk (Nautical)
+Dusk (Astronomical)
+Midnight
+
+RISING = NOW < noon
+SETTING = NOON < NOW
+
+
+          "twilight_stage": "twilight stage, can be civil, nautical or astronomical default: 'civil'",

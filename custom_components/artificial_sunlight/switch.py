@@ -1,4 +1,4 @@
-"""Switch for the Natural Adaptive Lighting integration."""
+"""Switch for the Artificial Sunlight integration."""
 from __future__ import annotations
 from time import perf_counter
 
@@ -247,7 +247,7 @@ def _split_service_data(service_data, adapt_brightness, adapt_color):
     return service_datas
 
 
-async def handle_apply(switch: AdaptiveSwitch, service_call: ServiceCall):
+async def handle_apply(switch: ArtificialSunlightSwitch, service_call: ServiceCall):
     """Handle the entity service apply."""
     hass = switch.hass
     data = service_call.data
@@ -257,7 +257,7 @@ async def handle_apply(switch: AdaptiveSwitch, service_call: ServiceCall):
     all_lights = _expand_light_groups(hass, all_lights)
     switch.turn_on_off_listener.lights.update(all_lights)
     _LOGGER.debug(
-        "Called 'natural_adaptive_lighting.apply' service with '%s'",
+        "Called 'artificial_sunlight.apply' service with '%s'",
         data,
     )
     for light in all_lights:
@@ -273,7 +273,9 @@ async def handle_apply(switch: AdaptiveSwitch, service_call: ServiceCall):
             )
 
 
-async def handle_set_manual_control(switch: AdaptiveSwitch, service_call: ServiceCall):
+async def handle_set_manual_control(
+    switch: ArtificialSunlightSwitch, service_call: ServiceCall
+):
     """Set or unset lights as 'manually controlled'."""
     lights = service_call.data[CONF_LIGHTS]
     if not lights:
@@ -281,7 +283,7 @@ async def handle_set_manual_control(switch: AdaptiveSwitch, service_call: Servic
     else:
         all_lights = _expand_light_groups(switch.hass, lights)
     _LOGGER.debug(
-        "Called 'natural_adaptive_lighting.set_manual_control' service with '%s'",
+        "Called 'artificial_sunlight.set_manual_control' service with '%s'",
         service_call.data,
     )
     if service_call.data[CONF_MANUAL_CONTROL]:
@@ -303,13 +305,13 @@ async def handle_set_manual_control(switch: AdaptiveSwitch, service_call: Servic
 
 @callback
 def _fire_manual_control_event(
-    switch: AdaptiveSwitch, light: str, context: Context, is_async=True
+    switch: ArtificialSunlightSwitch, light: str, context: Context, is_async=True
 ):
     """Fire an event that 'light' is marked as manual_control."""
     hass = switch.hass
     fire = hass.bus.async_fire if is_async else hass.bus.fire
     _LOGGER.debug(
-        "'natural_adaptive_lighting.manual_control' event fired for %s for light %s",
+        "'artificial_sunlight.manual_control' event fired for %s for light %s",
         switch.entity_id,
         light,
     )
@@ -326,7 +328,7 @@ def _fire_manual_control_event(
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities: bool
 ):
-    """Set up the AdaptiveLighting switch."""
+    """Set up the ArtificialSunlightLighting switch."""
     data = hass.data[DOMAIN]
     assert config_entry.entry_id in data
 
@@ -338,7 +340,7 @@ async def async_setup_entry(
     adapt_color_switch = SimpleSwitch("Adapt Color", True, hass, config_entry)
     adapt_brightness_switch = SimpleSwitch("Adapt Brightness", True, hass, config_entry)
 
-    switch = AdaptiveSwitch(
+    switch = ArtificialSunlightSwitch(
         hass,
         config_entry,
         turn_on_off_listener,
@@ -577,8 +579,8 @@ def _attributes_have_changed(
     return False
 
 
-class AdaptiveSwitch(SwitchEntity, RestoreEntity):
-    """Representation of a Natural Adaptive Lighting switch."""
+class ArtificialSunlightSwitch(SwitchEntity, RestoreEntity):
+    """Representation of a Artificial Sunlight switch."""
 
     def __init__(
         self,
@@ -590,7 +592,7 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
         adapt_brightness_switch: SimpleSwitch,
         loc,
     ):
-        """Initialize the Natural Adaptive Lighting switch."""
+        """Initialize the Artificial Sunlight switch."""
         self.hass = hass
         self.turn_on_off_listener = turn_on_off_listener
         self.sleep_mode_switch = sleep_mode_switch
@@ -673,7 +675,7 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
     @property
     def name(self):
         """Return the name of the device if any."""
-        return f"Natural Adaptive Lighting: {self._name}"
+        return f"Artificial Sunlight: {self._name}"
 
     @property
     def unique_id(self):
@@ -682,7 +684,7 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
 
     @property
     def is_on(self) -> Optional[bool]:
-        """Return true if natural natural adaptive lighting is on."""
+        """Return true if natural artificial sunlight is on."""
         return self._state
 
     async def async_added_to_hass(self) -> None:
@@ -766,7 +768,7 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
     def create_context(
         self, which: str = "default", parent: Optional[Context] = None
     ) -> Context:
-        """Create a context that identifies this Natural Adaptive Lighting instance."""
+        """Create a context that identifies this Artificial Sunlight instance."""
         # Right now the highest number of each context_id it can create is
         # 'adapt_lgt_XXXX_turn_on_9999999999999'
         # 'adapt_lgt_XXXX_interval_999999999999'
@@ -782,7 +784,7 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
     async def async_turn_on(  # pylint: disable=arguments-differ
         self, adapt_lights: bool = True
     ) -> None:
-        """Turn on natural natural adaptive lighting."""
+        """Turn on natural artificial sunlight."""
         _LOGGER.debug(
             "%s: Called 'async_turn_on', current state is '%s'", self._name, self._state
         )
@@ -800,7 +802,7 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
             )
 
     async def async_turn_off(self, **kwargs) -> None:
-        """Turn off natural natural adaptive lighting."""
+        """Turn off natural artificial sunlight."""
         if not self.is_on:
             return
         self._state = False
@@ -1053,12 +1055,12 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
 
 
 class SimpleSwitch(SwitchEntity, RestoreEntity):
-    """Representation of a Natural Adaptive Lighting switch."""
+    """Representation of a Artificial Sunlight switch."""
 
     def __init__(
         self, which: str, initial_state: bool, hass: HomeAssistant, config_entry
     ):
-        """Initialize the Natural Adaptive Lighting switch."""
+        """Initialize the Artificial Sunlight switch."""
         self.hass = hass
         data = validate(config_entry)
         self._icon = ICON
@@ -1066,7 +1068,7 @@ class SimpleSwitch(SwitchEntity, RestoreEntity):
         self._which = which
         name = data[CONF_NAME]
         self._unique_id = f"{name}_{slugify(self._which)}"
-        self._name = f"Natural Adaptive Lighting {which}: {name}"
+        self._name = f"Artificial Sunlight {which}: {name}"
         self._initial_state = initial_state
 
     @property
@@ -1086,10 +1088,10 @@ class SimpleSwitch(SwitchEntity, RestoreEntity):
 
     @property
     def is_on(self) -> Optional[bool]:
-        """Return true if natural natural adaptive lighting is on."""
+        """Return true if natural artificial sunlight is on."""
         return self._state
 
-    # register adaptive light switches to Hass using last state.
+    # register ArtificialSunlight light switches to Hass using last state.
     async def async_added_to_hass(self) -> None:
         """Call when entity about to be added to hass."""
         last_state = await self.async_get_last_state()
@@ -1102,11 +1104,11 @@ class SimpleSwitch(SwitchEntity, RestoreEntity):
             await self.async_turn_off()
 
     async def async_turn_on(self, **kwargs) -> None:
-        """Turn on natural natural adaptive lighting sleep mode."""
+        """Turn on natural artificial sunlight sleep mode."""
         self._state = True
 
     async def async_turn_off(self, **kwargs) -> None:
-        """Turn off natural natural adaptive lighting sleep mode."""
+        """Turn off natural artificial sunlight sleep mode."""
         self._state = False
 
 
@@ -1150,22 +1152,6 @@ class SunSettings:
         location = self.astral_location
 
         # Old values for Rendering ( implementation of custom sunrise_time / sunset_time and Offsets in new method needed. )
-        sunrise = (
-            location.sunrise(
-                date, local=False, observer_elevation=self.elevation_observer
-            )
-            if self.sunrise_time is None
-            else _replace_time(date, "sunrise")
-        ) + self.sunrise_offset
-        sunset = (
-            location.sunset(
-                date, local=False, observer_elevation=self.elevation_observer
-            )
-            if self.sunset_time is None
-            else _replace_time(date, "sunset")
-        ) + self.sunset_offset
-        solar_noon = location.noon(date, local=False)
-        solar_midnight = location.midnight(date, local=False)
 
         # if date < solar_noon:
         #     sun_direction = rising
@@ -1236,6 +1222,30 @@ class SunSettings:
             local=False,
             observer_elevation=self.elevation_observer,
         )
+        SunSettings.solar_noon = location.noon(date, local=False)
+        SunSettings.solar_midnight = location.midnight(date, local=False)
+
+        if self.horizon:
+            SunSettings.sunrise = SunSettings.lscpe_hrzn_mrng
+            SunSettings.sunset = SunSettings.lscpe_hrzn_eve
+        else:
+            SunSettings.sunrise = (
+                location.sunrise(
+                    date, local=False, observer_elevation=self.elevation_observer
+                )
+                if self.sunrise_time is None
+                else _replace_time(date, "sunrise")
+            )
+            SunSettings.sunset = (
+                location.sunset(
+                    date, local=False, observer_elevation=self.elevation_observer
+                )
+                if self.sunset_time is None
+                else _replace_time(date, "sunset")
+            )
+
+        SunSettings.sunrise += self.sunrise_offset
+        SunSettings.sunset += self.sunset_offset
 
         # print(
         #     "bl_hr_mrnng_strt: "
@@ -1271,10 +1281,10 @@ class SunSettings:
         # )
 
         events = [
-            (SUN_EVENT_SUNRISE, sunrise.timestamp()),
-            (SUN_EVENT_SUNSET, sunset.timestamp()),
-            (SUN_EVENT_NOON, solar_noon.timestamp()),
-            (SUN_EVENT_MIDNIGHT, solar_midnight.timestamp()),
+            (SUN_EVENT_SUNRISE, SunSettings.sunrise.timestamp()),
+            (SUN_EVENT_SUNSET, SunSettings.sunset.timestamp()),
+            (SUN_EVENT_NOON, SunSettings.solar_noon.timestamp()),
+            (SUN_EVENT_MIDNIGHT, SunSettings.solar_midnight.timestamp()),
         ]
         # Check whether order is correct
         events = sorted(events, key=lambda x: x[1])
@@ -1282,7 +1292,7 @@ class SunSettings:
         if events_names not in _ALLOWED_ORDERS:
             msg = (
                 "{self.name}: The sun events {events_names} are not in the expected"
-                " order. The Natural Adaptive Lighting integration will not work!"
+                " order. The Artificial Sunlight integration will not work!"
                 " This might happen if your sunrise/sunset offset is too large or"
                 " your manually set sunrise/sunset time is past/before noon/midnight."
             )
@@ -1334,36 +1344,32 @@ class SunSettings:
         if is_sleep:
             return self.sleep_brightness
         now = dt_util.utcnow()
-        now = now.replace(tzinfo=pytz.utc)
+        # now = now.replace(tzinfo=pytz.utc)
         self.get_sun_events(now)
-        delta_brightness = self.max_brightness - self.min_brightness
-        if self.horizon:
-            sunrise = SunSettings.lscpe_hrzn_mrng
-            sunset = SunSettings.lscpe_hrzn_eve
-        else:
-            sunrise = SunSettings.daylight_strt
-            sunset = SunSettings.daylight_end
 
-        if sunrise <= now <= sunset:
+        if SunSettings.sunrise <= now <= SunSettings.sunset:
             return self.max_brightness
 
-        if SunSettings.dawn <= now <= sunrise:
+        delta_brightness = self.max_brightness - self.min_brightness
+
+        if SunSettings.dawn < now < SunSettings.sunrise:
             # brightness transistion morning
             morning_pct = self.calc_pct(
                 now,
                 SunSettings.dawn,
-                sunrise,
+                SunSettings.sunrise,
                 SunSettings.dawn,
             )
+
             perct = (delta_brightness * morning_pct) + self.min_brightness
             return perct
 
-        if sunset < now < SunSettings.dusk:
+        if SunSettings.sunset < now < SunSettings.dusk:
             # brightness transistion evening
             evening_pct = self.calc_pct(
                 SunSettings.dusk,
                 now,
-                sunset,
+                SunSettings.sunset,
                 SunSettings.dusk,
             )
             perct = (delta_brightness * evening_pct) + self.min_brightness
@@ -1557,7 +1563,7 @@ class TurnOnOffListener:
 
     def is_manually_controlled(
         self,
-        switch: AdaptiveSwitch,
+        switch: ArtificialSunlightSwitch,
         light: str,
         force: bool,
         adapt_brightness: bool,
@@ -1580,12 +1586,12 @@ class TurnOnOffListener:
                 adapt_brightness and BRIGHTNESS_ATTRS.intersection(keys)
             ):
                 # Light was already on and 'light.turn_on' was not called by
-                # the natural_adaptive_lighting integration.
+                # the artificial_sunlight integration.
                 manual_control = self.manual_control[light] = True
                 _fire_manual_control_event(switch, light, turn_on_event.context)
                 _LOGGER.debug(
                     "'%s' was already on and 'light.turn_on' was not called by the"
-                    " natural_adaptive_lighting integration (context.id='%s'), the Adaptive"
+                    " artificial_sunlight integration (context.id='%s'), the ArtificialSunlight"
                     " Lighting will stop adapting the light until the switch or the"
                     " light turns off and then on again",
                     light,
@@ -1595,7 +1601,7 @@ class TurnOnOffListener:
 
     async def significant_change(
         self,
-        switch: AdaptiveSwitch,
+        switch: ArtificialSunlightSwitch,
         light: str,
         adapt_brightness: bool,
         adapt_color: bool,

@@ -1,9 +1,9 @@
 apply:
-  description: Applies the current Natural Adaptive Lighting settings to lights.
+  description: Applies the current Artificial Sunlight settings to lights.
   fields:
     entity_id:
-      description: entity_id of the Natural Adaptive Lighting switch.
-      example: switch.natural_adaptive_lighting_default
+      description: entity_id of the Artificial Sunlight switch.
+      example: switch.artificial_sunlight_default
     lights:
       description: "entity_id(s) of lights, default: lights of the switch"
       example: light.bedroom_ceiling
@@ -26,8 +26,8 @@ set_manual_control:
   description: Mark whether a light is 'manually controlled'.
   fields:
     entity_id:
-      description: entity_id of the Natural Adaptive Lighting switch.
-      example: switch.natural_adaptive_lighting_default
+      description: entity_id of the Artificial Sunlight switch.
+      example: switch.artificial_sunlight_default
     manual_control:
       description: "Whether to add ('true') or remove ('false') the light from the 'manual_control' list, default: true"
       example: true

@@ -3,7 +3,7 @@
   "config": {
     "step": {
       "user": {
-        "title": "Vælg et navn for denne Adaptive Belysning",
+        "title": "Vælg et navn for denne ArtificialSunlight Belysning",
         "description": "Vælg et navn til denne konfiguration. Du kan køre flere konfigurationer af Adaptiv Belysning, og hver af dem kan indeholde flere lys!",
         "data": {
           "name": "Navn"

@@ -1,9 +1,9 @@
 {
-  "title": "Natural Adaptive Lighting",
+  "title": "Artificial Sunlight",
   "config": {
     "step": {
       "user": {
-        "title": "Choose a name for the Natural Adaptive Lighting",
+        "title": "Choose a name for the Artificial Sunlight",
         "description": "Every instance can contain multiple lights!",
         "data": {
           "name": "Name"
@@ -17,8 +17,8 @@
   "options": {
     "step": {
       "init": {
-        "title": "Natural Adaptive Lighting options",
-        "description": "All settings for a Natural Adaptive Lighting component. The option names correspond with the YAML settings. No options are shown if you have this entry defined in YAML.",
+        "title": "Artificial Sunlight options",
+        "description": "All settings for a Artificial Sunlight component. The option names correspond with the YAML settings. No options are shown if you have this entry defined in YAML.",
         "data": {
           "lights": "lights",
           "initial_transition": "initial_transition, when lights go 'off' to 'on'",
@@ -37,7 +37,7 @@
           "sunrise_time": "sunrise_time, in 'HH:MM:SS' format (if 'None', it uses the actual sunrise time at your location)",
           "sunset_offset": "sunset_offset, in +/- seconds",
           "sunset_time": "sunset_time, in 'HH:MM:SS' format (if 'None', it uses the actual sunset time at your location)",
-          "take_over_control": "take_over_control, if anything but Natural Adaptive Lighting calls 'light.turn_on' when a light is already on, stop adapting that light until it (or the switch) toggles off -> on.",
+          "take_over_control": "take_over_control, if anything but Artificial Sunlight calls 'light.turn_on' when a light is already on, stop adapting that light until it (or the switch) toggles off -> on.",
           "detect_non_ha_changes": "detect_non_ha_changes, detects all >5% changes made to the lights (also outside of HA), requires 'take_over_control' to be enabled (calls 'homeassistant.update_entity' every 'interval'!)",
           "transition": "transition, in seconds",
           "dawn_color_temp": "colortemp at beginning of dawn",

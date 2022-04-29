@@ -1,9 +1,9 @@
 {
-  "title": "Adaptive Lighting",
+  "title": "Artificial Sunlight",
   "config": {
     "step": {
       "user": {
-        "title": "Benenne das Adaptive Lighting",
+        "title": "Benenne das Artificial Sunlight",
         "description": "Jede Instanz kann mehrere Licht Entitäten beinhalten",
         "data": {
           "name": "Name"
@@ -17,8 +17,8 @@
   "options": {
     "step": {
       "init": {
-        "title": "Adaptive Lighting Optionen",
-        "description": "Alle Einstellungen für eine Adaptive Lighting Komponente. Die Optionsnamen entsprechen den YAML-Einstellungen. Es werden keine Optionen angezeigt, wenn dieser Eintrag in YAML konfiguriert wurde.",
+        "title": "Artificial Sunlight Optionen",
+        "description": "Alle Einstellungen für eine Artificial Sunlight Komponente. Die Optionsnamen entsprechen den YAML-Einstellungen. Es werden keine Optionen angezeigt, wenn dieser Eintrag in YAML konfiguriert wurde.",
         "data": {
           "lights": "Lichter",
           "initial_transition": "initial_transition, wenn Lichter von 'off' zu 'on' wechseln oder wenn 'sleep_state' wechselt",
@@ -36,7 +36,7 @@
           "sunrise_time": "sunrise_time, Sonnenaufgangszeit in 'HH:MM:SS' Format (wenn 'None' wird die aktuelle Zeit des Sonnenaufgangs an deiner Position verwendet)",
           "sunset_offset": "sunset_offset, Sonnenuntergang Verschiebung in +/- seconds",
           "sunset_time": "sunset_time, Sonnenuntergangszeit in 'HH:MM:SS' Format (wenn 'None' wird die aktuelle Zeit des Sonnenuntergangs an deiner Position verwendet)",
-          "take_over_control": "take_over_control, wenn irgendetwas während ein Licht an ist außer Adaptive Lighting den Service 'light.turn_on' aufruft, stoppe die Anpassung des Lichtes (oder des Schalters) bis dieser wieder von off -> on geschaltet wird.",
+          "take_over_control": "take_over_control, wenn irgendetwas während ein Licht an ist außer Artificial Sunlight den Service 'light.turn_on' aufruft, stoppe die Anpassung des Lichtes (oder des Schalters) bis dieser wieder von off -> on geschaltet wird.",
           "detect_non_ha_changes": "detect_non_ha_changes, entdeckt alle Änderungen über 10% am Licht (auch außerhalb von HA gemacht), 'take_over_control' muss aktiviert sein (ruft 'homeassistant.update_entity' jede 'interval' auf!)",
           "transition": "transition, Wechselzeit in Sekunden"
         }

@@ -1,4 +1,4 @@
-"""Natural Adaptive Lighting integration in Home-Assistant."""
+"""Artificial Sunlight integration in Home-Assistant."""
 import logging
 from typing import Any, Dict
 

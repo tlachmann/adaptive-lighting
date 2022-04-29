@@ -18,7 +18,7 @@
     "step": {
       "init": {
         "title": "Options d'éclairage adaptatif",
-        "description": "Tous les paramètres de l'instance d'éclairage adaptatif. Les noms des options correspondent aux paramètres YAML. Aucune option n'est affichée si l'entrée adaptive_lighting est définie dans votre configuration YAML.",
+        "description": "Tous les paramètres de l'instance d'éclairage adaptatif. Les noms des options correspondent aux paramètres YAML. Aucune option n'est affichée si l'entrée ArtificialSunlight_lighting est définie dans votre configuration YAML.",
         "data": {
           "lights": "lights : Les lampes à contrôler",
           "initial_transition": "initial_transition : Transition (en secondes) lorsque l'état d'une lampe passe d'« éteinte » à « allumée ».",
