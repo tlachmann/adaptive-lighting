@@ -948,6 +948,7 @@ class ArtifSunSwitch(SwitchEntity, RestoreEntity):
         )
         if lights is None:
             lights = self._lights
+        if (self._only_once and not force) or not lights:
             return
         await self._adapt_lights(lights, transition, force, context)
 
@@ -1365,15 +1366,6 @@ class SunSettings:
 
         return self.min_brightness
 
-    def calc_color_temp_kelvin(self, percent: float, is_sleep: bool) -> float:
-        """Calculate the color temperature in Kelvin."""
-        if is_sleep:
-            return self.sleep_color_temp
-        if percent > 0:
-            delta = self.max_color_temp - self.min_color_temp
-            return (delta * percent) + self.min_color_temp
-        return self.min_color_temp
-
     def calc_color_temp_kelvin1(self, now: float, is_sleep: bool) -> float:
         """Calculate the color temperature in Kelvin."""
         if is_sleep:
@@ -1510,14 +1502,13 @@ class SunSettings:
             if transition is not None
             else self.calc_percent(0)
         )
-        _now = dt_util.utcnow()
-        _now = _now.replace(tzinfo=pytz.utc)
+        now = dt_util.utcnow()
+        now = now.replace(tzinfo=pytz.utc)
 
         # now = now.replace(tzinfo=pytz.utc)
-        self.get_sun_events(_now)
-        brightness_pct = self.calc_brightness_pct(_now, is_sleep)
-        # color_temp_kelvin = self.calc_color_temp_kelvin(percent, is_sleep)
-        color_temp_kelvin = self.calc_color_temp_kelvin1(_now, is_sleep)
+        self.get_sun_events(now)
+        brightness_pct = self.calc_brightness_pct(now, is_sleep)
+        color_temp_kelvin = self.calc_color_temp_kelvin1(now, is_sleep)
         color_temp_mired: float = color_temperature_kelvin_to_mired(color_temp_kelvin)
         rgb_color: tuple[float, float, float] = color_temperature_to_rgb(
             color_temp_kelvin
@@ -1618,11 +1609,11 @@ class TurnOnOffListener:
                 self.reset(eid)
 
         elif service == SERVICE_TURN_ON:
-            # _LOGGER.debug(
-            #    "Detected a 'light.turn_on' '%s' event with context.id='%s'",
-            #    entity_ids,
-            #    event.context.id,
-            # )
+            _LOGGER.debug(
+                "Detected a 'light.turn_on' '%s' event with context.id='%s'",
+                entity_ids,
+                event.context.id,
+            )
             for eid in entity_ids:
                 task = self.sleep_tasks.get(eid)
                 if task is not None:
