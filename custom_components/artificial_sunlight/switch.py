@@ -1,6 +1,5 @@
 """Switch for the Artificial Sunlight integration."""
 from __future__ import annotations
-from time import perf_counter
 
 import asyncio
 import bisect
@@ -137,13 +136,14 @@ from .const import (
     VALIDATION_TUPLES,
     replace_none_str,
     ######### Natural change addition #########
+    CONF_TWILIGHT_STAGE,
+    CONF_LANDSCAPE_HORIZON,
     CONF_DAWN_COLOR_TEMP,
     CONF_DUSK_COLOR_TEMP,
     CONF_SUNRISE_COLOR_TEMP,
     CONF_SUNSET_COLOR_TEMP,
-    CONF_TWILIGHT_STAGE,
-    CONF_LANDSCAPE_HORIZON,
     CONF_NIGHT_COLOR,
+    CONF_BLUEHOUR_CT,
     ######### Natural change addition #########
 )
 
@@ -199,7 +199,7 @@ BRIGHTNESS_ATTRS = {
 }
 
 # Keep a short domain version for the context instances (which can only be 36 chars)
-_DOMAIN_SHORT = "n_adapt_lgt"
+_DOMAIN_SHORT = "artif_lght"
 
 
 def _short_hash(string: str, length: int = 4) -> str:
@@ -247,7 +247,7 @@ def _split_service_data(service_data, adapt_brightness, adapt_color):
     return service_datas
 
 
-async def handle_apply(switch: ArtificialSunlightSwitch, service_call: ServiceCall):
+async def handle_apply(switch: ArtifSunSwitch, service_call: ServiceCall):
     """Handle the entity service apply."""
     hass = switch.hass
     data = service_call.data
@@ -273,9 +273,7 @@ async def handle_apply(switch: ArtificialSunlightSwitch, service_call: ServiceCa
             )
 
 
-async def handle_set_manual_control(
-    switch: ArtificialSunlightSwitch, service_call: ServiceCall
-):
+async def handle_set_manual_control(switch: ArtifSunSwitch, service_call: ServiceCall):
     """Set or unset lights as 'manually controlled'."""
     lights = service_call.data[CONF_LIGHTS]
     if not lights:
@@ -305,7 +303,7 @@ async def handle_set_manual_control(
 
 @callback
 def _fire_manual_control_event(
-    switch: ArtificialSunlightSwitch, light: str, context: Context, is_async=True
+    switch: ArtifSunSwitch, light: str, context: Context, is_async=True
 ):
     """Fire an event that 'light' is marked as manual_control."""
     hass = switch.hass
@@ -328,7 +326,7 @@ def _fire_manual_control_event(
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities: bool
 ):
-    """Set up the ArtificialSunlightLighting switch."""
+    """Set up the ArtificialSunlight switch."""
     data = hass.data[DOMAIN]
     assert config_entry.entry_id in data
 
@@ -340,7 +338,7 @@ async def async_setup_entry(
     adapt_color_switch = SimpleSwitch("Adapt Color", True, hass, config_entry)
     adapt_brightness_switch = SimpleSwitch("Adapt Brightness", True, hass, config_entry)
 
-    switch = ArtificialSunlightSwitch(
+    switch = ArtifSunSwitch(
         hass,
         config_entry,
         turn_on_off_listener,
@@ -579,7 +577,7 @@ def _attributes_have_changed(
     return False
 
 
-class ArtificialSunlightSwitch(SwitchEntity, RestoreEntity):
+class ArtifSunSwitch(SwitchEntity, RestoreEntity):
     """Representation of a Artificial Sunlight switch."""
 
     def __init__(
@@ -640,6 +638,12 @@ class ArtificialSunlightSwitch(SwitchEntity, RestoreEntity):
             transition=data[CONF_TRANSITION],
             depression=data[CONF_TWILIGHT_STAGE],
             horizon=data[CONF_LANDSCAPE_HORIZON],
+            dawn_ct=data[CONF_DAWN_COLOR_TEMP],
+            dusk_ct=data[CONF_DUSK_COLOR_TEMP],
+            sunrise_ct=data[CONF_SUNRISE_COLOR_TEMP],
+            sunset_ct=data[CONF_SUNSET_COLOR_TEMP],
+            night_col=data[CONF_NIGHT_COLOR],
+            bl_hr_ct=data[CONF_BLUEHOUR_CT],
         )
 
         # Set other attributes
@@ -864,9 +868,13 @@ class ArtificialSunlightSwitch(SwitchEntity, RestoreEntity):
             min_mireds, max_mireds = attributes["min_mireds"], attributes["max_mireds"]
             color_temp_mired = self._settings["color_temp_mired"]
             color_temp_mired = max(min(color_temp_mired, max_mireds), min_mireds)
-            service_data[ATTR_COLOR_TEMP] = color_temp_mired
+            service_data[
+                ATTR_COLOR_TEMP
+            ] = color_temp_mired  # For CCT only Lights if RGB is prefered.
         elif "color" in features and adapt_color:
-            service_data[ATTR_RGB_COLOR] = self._settings["rgb_color"]
+            service_data[ATTR_RGB_COLOR] = self._settings[
+                "rgb_color"
+            ]  # For RGB and RGB CCT if RGB is prefered
 
         context = context or self.create_context("adapt_lights")
         if (
@@ -940,7 +948,6 @@ class ArtificialSunlightSwitch(SwitchEntity, RestoreEntity):
         )
         if lights is None:
             lights = self._lights
-        if (self._only_once and not force) or not lights:
             return
         await self._adapt_lights(lights, transition, force, context)
 
@@ -1133,13 +1140,19 @@ class SunSettings:
     transition: int
     depression: str
     horizon: float
+    dawn_ct: int
+    dusk_ct: int
+    sunrise_ct: int
+    sunset_ct: int
+    night_col: int
+    bl_hr_ct: int
 
     def get_sun_events(self, date: datetime.datetime) -> dict[str, float]:
         """Get the four sun event's timestamps at 'date'."""
         # This function is called three times, for yesterday, today and tomorrow for the current date each interval
 
-        def _replace_time(date: datetime.datetime, key: str) -> datetime.datetime:
-            time = getattr(self, f"{key}_time")
+        def _replace_time(date: datetime.datetime, time) -> datetime.datetime:
+            # time = getattr(self, f"{key}_time")
             date_time = datetime.datetime.combine(date, time)
             try:  # HA ≤2021.05, https://github.com/basnijholt/adaptive-lighting/issues/128
                 utc_time = self.time_zone.localize(date_time).astimezone(dt_util.UTC)
@@ -1150,8 +1163,6 @@ class SunSettings:
             return utc_time
 
         location = self.astral_location
-
-        # Old values for Rendering ( implementation of custom sunrise_time / sunset_time and Offsets in new method needed. )
 
         # if date < solar_noon:
         #     sun_direction = rising
@@ -1183,10 +1194,32 @@ class SunSettings:
         (SunSettings.daylight_strt, SunSettings.daylight_end) = location.daylight(
             date, local=False
         )
-
         (SunSettings.night_strt, SunSettings.night_end) = location.night(
             date, local=False
         )
+
+        if self.horizon and (self.sunrise_time is None or self.sunset_time is None):
+            SunSettings.sunrise = SunSettings.lscpe_hrzn_mrng
+            SunSettings.sunset = SunSettings.lscpe_hrzn_eve
+        else:
+            SunSettings.sunrise = (
+                location.sunrise(
+                    date, local=False, observer_elevation=self.elevation_observer
+                )
+                if self.sunrise_time is None
+                else _replace_time(date, (getattr(self, "sunrise_time")))
+                # else _replace_time(date, "sunrise")
+            )
+            SunSettings.sunset = (
+                location.sunset(
+                    date, local=False, observer_elevation=self.elevation_observer
+                )
+                if self.sunset_time is None
+                else _replace_time(date, (getattr(self, "sunset_time")))
+                # else _replace_time(date, "sunset")
+            )
+        SunSettings.sunrise += self.sunrise_offset
+        SunSettings.sunset += self.sunset_offset
 
         # Color Render Values
         (
@@ -1223,68 +1256,18 @@ class SunSettings:
             observer_elevation=self.elevation_observer,
         )
         SunSettings.solar_noon = location.noon(date, local=False)
-        SunSettings.solar_midnight = location.midnight(date, local=False)
 
-        if self.horizon:
-            SunSettings.sunrise = SunSettings.lscpe_hrzn_mrng
-            SunSettings.sunset = SunSettings.lscpe_hrzn_eve
-        else:
-            SunSettings.sunrise = (
-                location.sunrise(
-                    date, local=False, observer_elevation=self.elevation_observer
-                )
-                if self.sunrise_time is None
-                else _replace_time(date, "sunrise")
-            )
-            SunSettings.sunset = (
-                location.sunset(
-                    date, local=False, observer_elevation=self.elevation_observer
-                )
-                if self.sunset_time is None
-                else _replace_time(date, "sunset")
-            )
-
-        SunSettings.sunrise += self.sunrise_offset
-        SunSettings.sunset += self.sunset_offset
-
-        # print(
-        #     "bl_hr_mrnng_strt: "
-        #     + str(bl_hr_mrnng_strt)
-        #     + "\n"
-        #     + "bl_hr_mrnng_end: "
-        #     + str(bl_hr_mrnng_end)
-        # )
-        # print(
-        #     "gldn_hr_mrnng_strt: "
-        #     + str(gldn_hr_mrnng_strt)
-        #     + "\n"
-        #     + "gldn_hr_mrnng_end: "
-        #     + str(gldn_hr_mrnng_end)
-        # )
-        # print("SUNRISE: " + str(sunrise))
-
-        # print("SUNSET: " + str(sunset))
-
-        # print(
-        #     "gldn_hr_nght_strt: "
-        #     + str(gldn_hr_nght_strt)
-        #     + "\n"
-        #     + "gldn_hr_nght_end: "
-        #     + str(gldn_hr_nght_end)
-        # )
-        # print(
-        #     "bl_hr_nght_strt: "
-        #     + str(bl_hr_nght_strt)
-        #     + "\n"
-        #     + "bl_hr_nght_end: "
-        #     + str(bl_hr_nght_end)
-        # )
+        # Due to Solar Midnight could be -1d, Solar Midnight is faked to datechange
+        SunSettings.prev_solar_midnight = location.midnight(date, local=False)
+        mytime = datetime.datetime.strptime("23:59:59", "%H:%M:%S").time()
+        SunSettings.solar_midnight = _replace_time(date, mytime)
+        SunSettings.solar_midnight = SunSettings.solar_midnight.replace(tzinfo=pytz.utc)
 
         events = [
             (SUN_EVENT_SUNRISE, SunSettings.sunrise.timestamp()),
             (SUN_EVENT_SUNSET, SunSettings.sunset.timestamp()),
             (SUN_EVENT_NOON, SunSettings.solar_noon.timestamp()),
-            (SUN_EVENT_MIDNIGHT, SunSettings.solar_midnight.timestamp()),
+            (SUN_EVENT_MIDNIGHT, SunSettings.prev_solar_midnight.timestamp()),
         ]
         # Check whether order is correct
         events = sorted(events, key=lambda x: x[1])
@@ -1334,46 +1317,50 @@ class SunSettings:
         percentage = (0 - k) * ((target_ts - h) / (h - x)) ** 2 + k
         return percentage
 
-    def calc_pct(self, val1, val2, val3, val4) -> float:
+    def calc_pct_exp(self, val1, val2, val3, val4) -> float:
         """subfunction for calc pct."""
         pct = math.pow((val1 - val2) / (val3 - val4), 2)
         return pct
 
-    def calc_brightness_pct(self, is_sleep: bool) -> float:
+    def calc_pct_sqrt(self, val1, val2, val3, val4) -> float:
+        """subfunction for calc pct."""
+        pct = math.sqrt(val1 - val2) / (val3 - val4)
+        return pct
+
+    def calc_brightness_pct(self, now, is_sleep: bool) -> float:
         """Calculate the natural brightness of the sun in %."""
         if is_sleep:
             return self.sleep_brightness
-        now = dt_util.utcnow()
+        # now = dt_util.utcnow()
         # now = now.replace(tzinfo=pytz.utc)
-        self.get_sun_events(now)
-
-        if SunSettings.sunrise <= now <= SunSettings.sunset:
-            return self.max_brightness
+        # self.get_sun_events(now)
 
         delta_brightness = self.max_brightness - self.min_brightness
 
         if SunSettings.dawn < now < SunSettings.sunrise:
             # brightness transistion morning
-            morning_pct = self.calc_pct(
+            morning_pct = self.calc_pct_exp(
                 now,
                 SunSettings.dawn,
                 SunSettings.sunrise,
                 SunSettings.dawn,
             )
-
             perct = (delta_brightness * morning_pct) + self.min_brightness
             return perct
 
         if SunSettings.sunset < now < SunSettings.dusk:
             # brightness transistion evening
-            evening_pct = self.calc_pct(
+            evening_pct = self.calc_pct_exp(
                 SunSettings.dusk,
                 now,
-                SunSettings.sunset,
                 SunSettings.dusk,
+                SunSettings.sunset,
             )
             perct = (delta_brightness * evening_pct) + self.min_brightness
             return perct
+
+        if SunSettings.sunrise <= now <= SunSettings.sunset:
+            return self.max_brightness
 
         return self.min_brightness
 
@@ -1386,6 +1373,130 @@ class SunSettings:
             return (delta * percent) + self.min_color_temp
         return self.min_color_temp
 
+    def calc_color_temp_kelvin1(self, now: float, is_sleep: bool) -> float:
+        """Calculate the color temperature in Kelvin."""
+        if is_sleep:
+            return self.sleep_color_temp
+
+        # Midnight till blue hour ct transistion
+        if now < SunSettings.bl_hr_mrnng_strt:
+            # night to morning transistion
+            pct = self.calc_pct_sqrt(
+                now,
+                SunSettings.prev_solar_midnight,
+                SunSettings.bl_hr_mrnng_strt,
+                SunSettings.prev_solar_midnight,
+            )
+            c_t = ((self.min_color_temp - self.bl_hr_ct) * pct) + self.bl_hr_ct
+            return c_t
+
+        # Blue Hour to golden hour ct transistion
+        if SunSettings.bl_hr_mrnng_strt <= now < SunSettings.gldn_hr_mrnng_strt:
+            # night to morning transistion
+            pct = self.calc_pct_sqrt(
+                now,
+                SunSettings.bl_hr_mrnng_strt,
+                SunSettings.gldn_hr_mrnng_strt,
+                SunSettings.bl_hr_mrnng_strt,
+            )
+            c_t = ((self.bl_hr_ct - self.min_color_temp) * pct) + self.min_color_temp
+            return c_t
+
+        # golden Hour to sunrise ct transistion
+        if SunSettings.gldn_hr_mrnng_strt <= now < SunSettings.gldn_hr_nght_end:
+            # night to morning transistion
+            pct = self.calc_pct_sqrt(
+                now,
+                SunSettings.gldn_hr_mrnng_strt,
+                SunSettings.gldn_hr_nght_end,
+                SunSettings.gldn_hr_mrnng_strt,
+            )
+            c_t = ((self.min_color_temp - self.sunrise_ct) * pct) + self.sunrise_ct
+            return c_t
+
+        # sunrise to noon ct transistion
+        if SunSettings.gldn_hr_mrnng_end <= now < SunSettings.solar_noon:
+            # night to morning transistion
+            pct = self.calc_pct_sqrt(
+                now,
+                SunSettings.gldn_hr_mrnng_end,
+                SunSettings.solar_noon,
+                SunSettings.gldn_hr_mrnng_end,
+            )
+            c_t = ((self.sunrise_ct - self.max_color_temp) * pct) + self.max_color_temp
+            return c_t
+
+        # noon to sunset ct transistion
+        if SunSettings.solar_noon <= now < SunSettings.gldn_hr_nght_strt:
+            # brightness transistion evening
+            pct = self.calc_pct_sqrt(
+                SunSettings.gldn_hr_nght_strt,
+                now,
+                SunSettings.gldn_hr_nght_strt,
+                SunSettings.solar_noon,
+            )
+            c_t = ((self.max_color_temp - self.sunset_ct) * pct) + self.sunset_ct
+            return c_t
+
+        # sunset to golden hour ct transistion
+        if SunSettings.gldn_hr_nght_strt <= now < SunSettings.gldn_hr_nght_end:
+            # brightness transistion evening
+            pct = self.calc_pct_sqrt(
+                SunSettings.gldn_hr_nght_end,
+                now,
+                SunSettings.gldn_hr_nght_end,
+                SunSettings.gldn_hr_nght_strt,
+            )
+            c_t = ((self.sunset_ct - self.min_color_temp) * pct) + self.min_color_temp
+            return c_t
+
+        # golden hour to blue hour ct transistion
+        if SunSettings.gldn_hr_nght_end <= now < SunSettings.bl_hr_nght_end:
+            # brightness transistion evening
+            pct = self.calc_pct_sqrt(
+                SunSettings.bl_hr_nght_end,
+                now,
+                SunSettings.bl_hr_nght_end,
+                SunSettings.gldn_hr_nght_end,
+            )
+            c_t = ((self.min_color_temp - self.bl_hr_ct) * pct) + self.bl_hr_ct
+            return c_t
+
+        # blue hour to night ct transistion
+        if SunSettings.bl_hr_nght_end <= now < SunSettings.solar_midnight:
+            # brightness transistion evening
+            pct = self.calc_pct_sqrt(
+                SunSettings.solar_midnight,
+                now,
+                SunSettings.solar_midnight,
+                SunSettings.bl_hr_nght_end,
+            )
+            c_t = ((self.bl_hr_ct - self.min_color_temp) * pct) + self.min_color_temp
+            return c_t
+
+        return self.min_color_temp
+        # self.bl_hr_ct
+        # self.dawn_ct
+        # self.dusk_ct
+        # self.sunrise_ct
+        # self.sunset_ct
+        # self.night_col
+        # self.bl_hr_ct
+
+        # SunSettings.bl_hr_mrnng_strt,
+        # SunSettings.bl_hr_mrnng_end,
+
+        # SunSettings.bl_hr_nght_strt,
+        # SunSettings.bl_hr_nght_end,
+
+        # SunSettings.gldn_hr_mrnng_strt,
+        # SunSettings.gldn_hr_mrnng_end,
+
+        # SunSettings.gldn_hr_nght_strt,
+        # SunSettings.gldn_hr_nght_end,
+        # SunSettings.solar_noon
+        # SunSettings.solar_midnight
+
     def get_settings(
         self, is_sleep, transition
     ) -> dict[str, Union[float, tuple[float, float], tuple[float, float, float]]]:
@@ -1393,15 +1504,19 @@ class SunSettings:
 
         Calculating all values takes <0.5ms.
         """
-        t1_strt = perf_counter()
         percent = (
             self.calc_percent(transition)
             if transition is not None
             else self.calc_percent(0)
         )
+        _now = dt_util.utcnow()
+        _now = _now.replace(tzinfo=pytz.utc)
 
-        brightness_pct = self.calc_brightness_pct(is_sleep)
-        color_temp_kelvin = self.calc_color_temp_kelvin(percent, is_sleep)
+        # now = now.replace(tzinfo=pytz.utc)
+        self.get_sun_events(_now)
+        brightness_pct = self.calc_brightness_pct(_now, is_sleep)
+        # color_temp_kelvin = self.calc_color_temp_kelvin(percent, is_sleep)
+        color_temp_kelvin = self.calc_color_temp_kelvin1(_now, is_sleep)
         color_temp_mired: float = color_temperature_kelvin_to_mired(color_temp_kelvin)
         rgb_color: tuple[float, float, float] = color_temperature_to_rgb(
             color_temp_kelvin
@@ -1421,11 +1536,7 @@ class SunSettings:
             color_temp_mired,
             rgb_color,
         )  # Custom,readable info log
-        t1_stop = perf_counter()
-        print(
-            "Elapsed time during the whole program in seconds:",
-            (t1_stop - t1_strt),
-        )
+
         return {
             "brightness_pct": brightness_pct,
             "color_temp_kelvin": color_temp_kelvin,
@@ -1563,7 +1674,7 @@ class TurnOnOffListener:
 
     def is_manually_controlled(
         self,
-        switch: ArtificialSunlightSwitch,
+        switch: ArtifSunSwitch,
         light: str,
         force: bool,
         adapt_brightness: bool,
@@ -1601,7 +1712,7 @@ class TurnOnOffListener:
 
     async def significant_change(
         self,
-        switch: ArtificialSunlightSwitch,
+        switch: ArtifSunSwitch,
         light: str,
         adapt_brightness: bool,
         adapt_color: bool,
