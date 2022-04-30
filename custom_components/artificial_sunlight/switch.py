@@ -1324,7 +1324,8 @@ class SunSettings:
 
     def calc_pct_sqrt(self, val1, val2, val3, val4) -> float:
         """subfunction for calc pct."""
-        pct = math.sqrt(val1 - val2) / (val3 - val4)
+        val = (val1 - val2) / (val3 - val4)
+        pct = math.sqrt(abs(val))
         return pct
 
     def calc_brightness_pct(self, now, is_sleep: bool) -> float:
@@ -1403,12 +1404,12 @@ class SunSettings:
             return c_t
 
         # golden Hour to sunrise ct transistion
-        if SunSettings.gldn_hr_mrnng_strt <= now < SunSettings.gldn_hr_nght_end:
+        if SunSettings.gldn_hr_mrnng_strt <= now < SunSettings.gldn_hr_mrnng_end:
             # night to morning transistion
             pct = self.calc_pct_sqrt(
                 now,
                 SunSettings.gldn_hr_mrnng_strt,
-                SunSettings.gldn_hr_nght_end,
+                SunSettings.gldn_hr_mrnng_end,
                 SunSettings.gldn_hr_mrnng_strt,
             )
             c_t = ((self.min_color_temp - self.sunrise_ct) * pct) + self.sunrise_ct

@@ -15,7 +15,7 @@ from .const import (  # pylint: disable=unused-import
     NONE_STR,
     VALIDATION_TUPLES,
 )
-from ._switch import _supported_features
+from .switch import _supported_features
 
 _LOGGER = logging.getLogger(__name__)
 
