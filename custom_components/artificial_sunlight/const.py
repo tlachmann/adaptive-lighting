@@ -7,8 +7,30 @@ import homeassistant.helpers.config_validation as cv
 ICON = "mdi:theme-light-dark"
 
 DOMAIN = "artificial_sunlight"
-SUN_EVENT_NOON = "solar_noon"
-SUN_EVENT_MIDNIGHT = "solar_midnight"
+
+######### BEGIN Natural change addition #########
+EVENT_DAWN = "dawn"
+EVENT_BLUE_HOUR_MORNING = "blue_hour_morning"  # Beginning of Blue Hour in the Morning
+EVENT_BLUE_GOLDEN_TRANSITION = (
+    "blue_golden_hour_morning"  # Tranistion from Blue to Golden Hour in the Morning
+)
+EVENT_SUNRISE = "sunrise"
+EVENT_GOLDEN_HOUR_MORNING = (
+    "golden_hour_morning"  # Ending of Golden Hour in the Morning
+)
+EVENT_NOON = "solar_noon"
+EVENT_GOLDEN_HOUR_EVENING = (
+    "golden_hour_evening"  # Beginning of Golden Hour in the Evening
+)
+EVENT_SUNSET = "sunset"
+EVENT_GOLDEN_BLUE_TRANSITION = (
+    "golden_blue_hour_evening"  # Tranistion from Golden to Blue Hour in the Evening
+)
+EVENT_BLUE_HOUR_EVENING = "blue_hour_morning"  # Ending of Blue Hour in the Evening
+EVENT_DUSK = "dusk"
+EVENT_MIDNIGHT = "solar_midnight"
+######### Natural change addition END #########
+
 
 CONF_NAME, DEFAULT_NAME = "name", "default"
 CONF_LIGHTS, DEFAULT_LIGHTS = "lights", []
@@ -64,9 +86,11 @@ CONF_DUSK_COLOR_TEMP, DEFAULT_DUSK_COLOR_TEMP = (
 CONF_SUNRISE_COLOR_TEMP, DEFAULT_SUNRISE_COLOR_TEMP = "sunrise_color_temp", 3000
 CONF_SUNSET_COLOR_TEMP, DEFAULT_SUNSET_COLOR_TEMP = "sunset_color_temp", 5000  #
 CONF_BLUEHOUR_CT, DEFAULT_BLUEHOUR_CT = "bluehour_color_temp", 20000  #
-CONF_NIGHT_COLOR, DEFAULT_NIGHT_COLOR = "night_color", "(0, 0, 255)"
 # Defines Blue color as night light
 
+CONF_USE_NIGHT_COLOR_RGB, DEFAULT_USE_NIGHT_COLOR_RGB = "use_night_color_rgb", False
+CONF_NIGHT_COLOR, DEFAULT_NIGHT_COLOR = "night_color", "(0, 0, 255)"
+CONF_EXTEND_CCT_RGB_COLOR, DEFAULT_EXTEND_CCT_RGB_COLOR = "extend_cct_rgb_color", False
 
 ######### Natural change addition END #########
 
@@ -122,6 +146,8 @@ VALIDATION_TUPLES = [
     (CONF_DUSK_COLOR_TEMP, DEFAULT_DUSK_COLOR_TEMP, int_between(1000, 10000)),
     (CONF_SUNRISE_COLOR_TEMP, DEFAULT_SUNRISE_COLOR_TEMP, int_between(1000, 10000)),
     (CONF_SUNSET_COLOR_TEMP, DEFAULT_SUNSET_COLOR_TEMP, int_between(1000, 10000)),
+    (CONF_USE_NIGHT_COLOR_RGB, DEFAULT_USE_NIGHT_COLOR_RGB, bool),
+    (CONF_EXTEND_CCT_RGB_COLOR, DEFAULT_EXTEND_CCT_RGB_COLOR, bool),
     ######### Natural change addition END #########
 ]
 
