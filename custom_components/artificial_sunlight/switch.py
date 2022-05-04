@@ -1,3 +1,4 @@
+# pylint: disable=fixme
 """Switch for the Artificial Sunlight integration."""
 from __future__ import annotations
 
@@ -293,6 +294,7 @@ async def handle_apply(switch: ArtifSunSwitch, service_call: ServiceCall):
                 data[ATTR_ADAPT_BRIGHTNESS],
                 data[ATTR_ADAPT_COLOR],
                 data[CONF_PREFER_RGB_COLOR],
+                data[CONF_EXTEND_CCT_RGB_COLOR],
                 force=True,
                 context=switch.create_context("service", parent=service_call.context),
             )
@@ -673,6 +675,8 @@ class ArtifSunSwitch(SwitchEntity, RestoreEntity):
             sunrise_ct=data[CONF_SUNRISE_COLOR_TEMP],
             sunset_ct=data[CONF_SUNSET_COLOR_TEMP],
             bl_hr_ct=data[CONF_BLUEHOUR_CT],
+            use_night_color=data[CONF_USE_NIGHT_COLOR_RGB],
+            night_col=data[CONF_NIGHT_COLOR],
         )
 
         # Set other attributes
@@ -858,6 +862,7 @@ class ArtifSunSwitch(SwitchEntity, RestoreEntity):
         adapt_brightness: Optional[bool] = None,
         adapt_color: Optional[bool] = None,
         prefer_rgb_color: Optional[bool] = None,
+        extend_cct_rgb_color: Optional[bool] = None,
         force: bool = False,
         context: Optional[Context] = None,
     ) -> None:
@@ -876,6 +881,8 @@ class ArtifSunSwitch(SwitchEntity, RestoreEntity):
             adapt_color = self.adapt_color_switch.is_on
         if prefer_rgb_color is None:
             prefer_rgb_color = self._prefer_rgb_color
+        if extend_cct_rgb_color is None:
+            extend_cct_rgb_color = self._extend_cct_rgb_color
 
         if "transition" in features:
             service_data[ATTR_TRANSITION] = transition
@@ -890,35 +897,40 @@ class ArtifSunSwitch(SwitchEntity, RestoreEntity):
 
         # TODO use max/min mired for transition between ct and rgb to extend CT Range of CCT / RGB entity
 
-        #
-        # self._extend_cct_rgb_color = data[CONF_EXTEND_CCT_RGB_COLOR]
-        # self._night_col = data[CONF_NIGHT_COLOR]
+        if (
+            "color" in features and adapt_color and not "color_temp" in features
+        ):  # COMMENT: Logic for RGB and RGB CCT if RGB is prefered
+            service_data[ATTR_RGB_COLOR] = self._settings["rgb_color"]
 
         if (
-            "color_temp" in features and adapt_color and not "color" in features
+            "color_temp" in features and adapt_color and not ("color" in features)
         ):  # COMMENT: Logic for CT only Lights and RGB CCT Lights if not RGB Color prefered
             attributes = self.hass.states.get(light).attributes
             min_mireds, max_mireds = attributes["min_mireds"], attributes["max_mireds"]
             color_temp_mired = self._settings["color_temp_mired"]
-            color_temp_mired = max(min(color_temp_mired, max_mireds), min_mireds)
-            service_data[ATTR_COLOR_TEMP] = color_temp_mired
+            # color_temp_mired = max(min(color_temp_mired, max_mireds), min_mireds)
+            # service_data[ATTR_COLOR_TEMP] = color_temp_mired
         elif (
             "color_temp" and "color" in features and adapt_color
         ):  # COMMENT: Logic for RGB CCT Lights to extend CT with RGB
             attributes = self.hass.states.get(light).attributes
             min_mireds, max_mireds = attributes["min_mireds"], attributes["max_mireds"]
             color_temp_mired = self._settings["color_temp_mired"]
-
-            color_temp_mired = max(min(color_temp_mired, max_mireds), min_mireds)
-            service_data[ATTR_COLOR_TEMP] = color_temp_mired
-        elif (
-            "color" in features and adapt_color
-        ):  # COMMENT: Logic for RGB and RGB CCT if RGB is prefered
-            service_data[ATTR_RGB_COLOR] = self._settings["rgb_color"]
-
+            if (
+                (
+                    extend_cct_rgb_color
+                    and not min_mireds <= color_temp_mired <= max_mireds
+                )
+                or prefer_rgb_color
+                or (self._settings["use_night_color"] and self._settings["night"])
+            ):
+                service_data[ATTR_RGB_COLOR] = self._settings["rgb_color"]
+            else:
+                color_temp_mired = max(min(color_temp_mired, max_mireds), min_mireds)
+                service_data[ATTR_COLOR_TEMP] = color_temp_mired
             # and (prefer_rgb_color or use_night_color)
         # if (
-        #     "color_temp" in features
+        #
         #     and adapt_color
         #     and not (prefer_rgb_color and "color" in features)
         # ):  # COMMENT: Logic for CT only Lights and RGB CCT Lights
@@ -1048,7 +1060,7 @@ class ArtifSunSwitch(SwitchEntity, RestoreEntity):
                     context.id,
                 )
                 continue
-            # NOTE Executing time independend coroutines for adapting a single entity in running loops
+            # COMMENT Executing time independend coroutines for adapting a single entity in running loops
             await self._adapt_light(light, transition, force=force, context=context)
 
     async def _sleep_mode_switch_state_event(self, event: Event) -> None:
@@ -1207,6 +1219,8 @@ class SunSettings:
     sunrise_ct: int
     sunset_ct: int
     bl_hr_ct: int
+    use_night_color: Optional[bool]
+    night_col: tuple[int, int, int]
 
     def get_sun_events(self, date: datetime.datetime) -> dict[str, float]:
         """Get the four sun event's timestamps at 'date'."""
@@ -1230,7 +1244,7 @@ class SunSettings:
         rising = astral.SunDirection.RISING
         setting = astral.SunDirection.SETTING
 
-        # NOTE Reorganize with Local TZ
+        # TODO Reorganize with Local TZ
 
         # New Values for Brightness render
         SunSettings.dawn = location.dawn(
@@ -1474,14 +1488,16 @@ class SunSettings:
     def calc_color_temp_kelvin1(self, now: float, is_sleep: bool) -> float:
         """Calculate the color temperature in Kelvin."""
         if is_sleep:
+            night = False
             return self.sleep_color_temp
 
         # Midnight till blue hour ct transistion
         # - Subprocess is tested
         # TODO Needs to work with Colors, if Night Color Mode is enabled
-        # [x]  Subprocess is tested
+        # [ ]  Subprocess is tested
         if SunSettings.prev_solar_midnight < now < SunSettings.next_bl_hr_mrnng_strt:
             # night to morning transistion
+            night = True
             pct = self.calc_pct_sqrt8(
                 SunSettings.next_bl_hr_mrnng_strt,
                 now,
@@ -1496,12 +1512,13 @@ class SunSettings:
                 SunSettings.next_bl_hr_mrnng_strt,
                 pct,
             )
-            return c_t
+            return c_t, night
 
         # Blue Hour to golden hour ct transistion
-        # [x] Subprocess is tested
+        # [ ] Subprocess is tested
         if SunSettings.bl_hr_mrnng_strt <= now < SunSettings.gldn_hr_mrnng_strt:
             # night to morning transistion
+            night = False
             pct = self.calc_pct_sqrt(
                 now,
                 SunSettings.bl_hr_mrnng_strt,
@@ -1516,12 +1533,13 @@ class SunSettings:
                 SunSettings.gldn_hr_mrnng_strt,
                 pct,
             )
-            return c_t
+            return c_t, night
 
         # golden Hour to sunrise ct transistion
-        # [x] Subprocess is tested
+        # [ ] Subprocess is tested
         if SunSettings.gldn_hr_mrnng_strt <= now < SunSettings.gldn_hr_mrnng_end:
             # night to morning transistion
+            night = False
             pct = self.calc_pct_sqrt(
                 now,
                 SunSettings.gldn_hr_mrnng_strt,
@@ -1536,12 +1554,13 @@ class SunSettings:
                 SunSettings.gldn_hr_mrnng_end,
                 pct,
             )
-            return c_t
+            return c_t, night
 
         # sunrise to noon ct transistion
-        # [x]  Subprocess is tested
+        # [ ]  Subprocess is tested
         if SunSettings.gldn_hr_mrnng_end <= now < SunSettings.solar_noon:
             # night to morning transistion
+            night = False
             pct = self.calc_pct_sqrt8(
                 now,
                 SunSettings.gldn_hr_mrnng_end,
@@ -1556,12 +1575,13 @@ class SunSettings:
                 SunSettings.solar_noon,
                 pct,
             )
-            return c_t
+            return c_t, night
 
         # noon to sunset ct transistion
-        # [x]  Subprocess is tested
+        # [ ]  Subprocess is tested
         if SunSettings.solar_noon <= now < SunSettings.gldn_hr_nght_strt:
             # brightness transistion evening
+            night = False
             pct = self.calc_pct_sqrt8(
                 SunSettings.gldn_hr_nght_strt,
                 now,
@@ -1576,12 +1596,13 @@ class SunSettings:
                 SunSettings.gldn_hr_nght_strt,
                 pct,
             )
-            return c_t
+            return c_t, night
 
         # sunset to golden hour ct transistion
-        # [x]  Subprocess is tested
+        # [ ]  Subprocess is tested
         if SunSettings.gldn_hr_nght_strt <= now < SunSettings.gldn_hr_nght_end:
             # brightness transistion evening
+            night = False
             pct = self.calc_pct_sqrt(
                 SunSettings.gldn_hr_nght_end,
                 now,
@@ -1596,12 +1617,13 @@ class SunSettings:
                 SunSettings.gldn_hr_nght_end,
                 pct,
             )
-            return c_t
+            return c_t, night
 
         # golden hour to blue hour ct transistion
-        # [x]  Subprocess is tested
+        # [ ]  Subprocess is tested
         if SunSettings.gldn_hr_nght_end <= now < SunSettings.bl_hr_nght_end:
             # brightness transistion evening
+            night = False
             pct = self.calc_pct_sqrt(
                 SunSettings.bl_hr_nght_end,
                 now,
@@ -1616,20 +1638,21 @@ class SunSettings:
                 SunSettings.bl_hr_nght_end,
                 pct,
             )
-            return c_t
+            return c_t, night
 
         # blue hour to night ct transistion
-        # [x]  Subprocess is tested
+        # [ ]  Subprocess is tested
         # TODO Needs to work with Colors, if Night Color Mode is enabled
         if SunSettings.bl_hr_nght_end <= now < SunSettings.next_solar_midnight:
             # brightness transistion evening
+            night = True
             pct = self.calc_pct_sqrt8(
                 now,
                 SunSettings.bl_hr_nght_end,
                 SunSettings.next_solar_midnight,
                 SunSettings.bl_hr_nght_end,
             )
-            c_t = ((self.dusk_ct - self.min_color_temp) * pct) + self.min_color_temp
+            c_t = ((self.min_color_temp - self.dusk_ct) * pct) + self.dusk_ct
             _LOGGER.debug(
                 "CT %s Night %s -> Midnight %s  pct: %s",
                 c_t,
@@ -1637,7 +1660,7 @@ class SunSettings:
                 SunSettings.next_solar_midnight,
                 pct,
             )
-            return c_t
+            return c_t, night
 
         _LOGGER.debug("CT %s Fallback to min CT %s", c_t, now)
         return self.min_color_temp
@@ -1659,16 +1682,25 @@ class SunSettings:
         self.get_sun_events(now)
         percent = SunSettings.solar_elevation
         brightness_pct = self.calc_brightness_pct(now, is_sleep)
-        color_temp_kelvin = self.calc_color_temp_kelvin1(now, is_sleep)
+        color_temp_kelvin, night = self.calc_color_temp_kelvin1(now, is_sleep)
         color_temp_mired: float = color_temperature_kelvin_to_mired(color_temp_kelvin)
         rgb_color: tuple[float, float, float] = color_temperature_to_rgb(
             color_temp_kelvin
         )
         rgb_color = tuple(map(int, rgb_color))
+        if night and self.use_night_color:
+            rgb_color = eval(self.night_col)  # pylint: disable=eval-used
+
         xy_color: tuple[float, float] = color_RGB_to_xy(*rgb_color)
         xy_color = tuple(map(int, xy_color))
         hs_color: tuple[float, float] = color_xy_to_hs(*xy_color)
         hs_color = tuple(map(int, hs_color))
+
+        # night_col
+
+        # self._night_col = data[CONF_NIGHT_COLOR]
+        # if use_night_color is None:
+        #     use_night_color = self._use_night_color
 
         _LOGGER.info(
             "'%s': Calculating... SunPosition:'%s', Brightness:'%s', color_temp_kelvin='%s', color_temp_mired='%s', rgb_color='%s'",
@@ -1688,6 +1720,8 @@ class SunSettings:
             "xy_color": xy_color,
             "hs_color": hs_color,
             "sun_position": percent,
+            "night": night,
+            "use_night_color": self.use_night_color,
         }
 
 

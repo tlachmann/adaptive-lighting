@@ -80,7 +80,7 @@ CONF_BLUEHOUR_CT, DEFAULT_BLUEHOUR_CT = "bluehour_color_temp", 20000  #
 # Defines Blue color as night light
 
 CONF_USE_NIGHT_COLOR_RGB, DEFAULT_USE_NIGHT_COLOR_RGB = "use_night_color_rgb", False
-CONF_NIGHT_COLOR, DEFAULT_NIGHT_COLOR = "night_color", "(0, 0, 255)"
+CONF_NIGHT_COLOR, DEFAULT_NIGHT_COLOR = "night_color", [0, 0, 255]
 CONF_EXTEND_CCT_RGB_COLOR, DEFAULT_EXTEND_CCT_RGB_COLOR = "extend_cct_rgb_color", False
 
 ######### Natural change addition END #########
