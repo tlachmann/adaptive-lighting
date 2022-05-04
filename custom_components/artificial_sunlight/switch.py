@@ -890,26 +890,49 @@ class ArtifSunSwitch(SwitchEntity, RestoreEntity):
 
         # TODO use max/min mired for transition between ct and rgb to extend CT Range of CCT / RGB entity
 
-        # self._use_night_color = data[CONF_USE_NIGHT_COLOR_RGB]
+        #
         # self._extend_cct_rgb_color = data[CONF_EXTEND_CCT_RGB_COLOR]
         # self._night_col = data[CONF_NIGHT_COLOR]
 
         if (
-            "color_temp" in features
-            and adapt_color
-            and not (prefer_rgb_color and "color" in features)
-        ):
+            "color_temp" in features and adapt_color and not "color" in features
+        ):  # COMMENT: Logic for CT only Lights and RGB CCT Lights if not RGB Color prefered
             attributes = self.hass.states.get(light).attributes
             min_mireds, max_mireds = attributes["min_mireds"], attributes["max_mireds"]
             color_temp_mired = self._settings["color_temp_mired"]
             color_temp_mired = max(min(color_temp_mired, max_mireds), min_mireds)
-            service_data[
-                ATTR_COLOR_TEMP
-            ] = color_temp_mired  # For CCT only Lights if RGB is prefered.
-        elif "color" in features and adapt_color:
-            service_data[ATTR_RGB_COLOR] = self._settings[
-                "rgb_color"
-            ]  # For RGB and RGB CCT if RGB is prefered
+            service_data[ATTR_COLOR_TEMP] = color_temp_mired
+        elif (
+            "color_temp" and "color" in features and adapt_color
+        ):  # COMMENT: Logic for RGB CCT Lights to extend CT with RGB
+            attributes = self.hass.states.get(light).attributes
+            min_mireds, max_mireds = attributes["min_mireds"], attributes["max_mireds"]
+            color_temp_mired = self._settings["color_temp_mired"]
+
+            color_temp_mired = max(min(color_temp_mired, max_mireds), min_mireds)
+            service_data[ATTR_COLOR_TEMP] = color_temp_mired
+        elif (
+            "color" in features and adapt_color
+        ):  # COMMENT: Logic for RGB and RGB CCT if RGB is prefered
+            service_data[ATTR_RGB_COLOR] = self._settings["rgb_color"]
+
+            # and (prefer_rgb_color or use_night_color)
+        # if (
+        #     "color_temp" in features
+        #     and adapt_color
+        #     and not (prefer_rgb_color and "color" in features)
+        # ):  # COMMENT: Logic for CT only Lights and RGB CCT Lights
+        #     attributes = self.hass.states.get(light).attributes
+        #     min_mireds, max_mireds = attributes["min_m
+        #     color_temp_mired = self._settings["color_temp_mired"]
+        #     color_temp_mired = max(min(color_temp_mired, max_mireds), min_mireds)
+        #     service_data[ATTR_COLOR_TEMP] = color_temp_mired
+        # elif (
+        #     "color" in features and adapt_color
+        # ):  # COMMENT: Logic for RGB and RGB CCT if RGB is prefered
+        #     service_data[ATTR_RGB_COLOR] = self._settings["rgb_color"]
+
+        ####
 
         context = context or self.create_context("adapt_lights")
         if (
@@ -1465,7 +1488,7 @@ class SunSettings:
                 SunSettings.next_bl_hr_mrnng_strt,
                 SunSettings.prev_solar_midnight,
             )
-            c_t = ((self.min_color_temp - self.bl_hr_ct) * pct) + self.bl_hr_ct
+            c_t = ((self.dawn_ct - self.min_color_temp) * pct) + self.min_color_temp
             _LOGGER.debug(
                 "CT %s Midnight %s -> Blue Hour %s  pct: %s",
                 c_t,
@@ -1485,7 +1508,7 @@ class SunSettings:
                 SunSettings.gldn_hr_mrnng_strt,
                 SunSettings.bl_hr_mrnng_strt,
             )
-            c_t = ((self.min_color_temp - self.bl_hr_ct) * pct) + self.bl_hr_ct
+            c_t = ((self.bl_hr_ct - self.dawn_ct) * pct) + self.dawn_ct
             _LOGGER.debug(
                 "CT %s Blue Hour Morning %s -> Golden Hour %s  pct: %s",
                 c_t,
@@ -1505,7 +1528,7 @@ class SunSettings:
                 SunSettings.gldn_hr_mrnng_end,
                 SunSettings.gldn_hr_mrnng_strt,
             )
-            c_t = ((self.sunrise_ct - self.min_color_temp) * pct) + self.min_color_temp
+            c_t = ((self.sunrise_ct - self.bl_hr_ct) * pct) + self.bl_hr_ct
             _LOGGER.debug(
                 "CT %s Golden Hour Morning %s -> Morning %s  pct: %s",
                 c_t,
@@ -1565,7 +1588,7 @@ class SunSettings:
                 SunSettings.gldn_hr_nght_end,
                 SunSettings.gldn_hr_nght_strt,
             )
-            c_t = ((self.sunset_ct - self.min_color_temp) * pct) + self.min_color_temp
+            c_t = ((self.sunset_ct - self.bl_hr_ct) * pct) + self.bl_hr_ct
             _LOGGER.debug(
                 "CT %s Golden Hour %s -> Blue Hour %s  pct: %s",
                 c_t,
@@ -1585,7 +1608,7 @@ class SunSettings:
                 SunSettings.bl_hr_nght_end,
                 SunSettings.gldn_hr_nght_end,
             )
-            c_t = ((self.min_color_temp - self.bl_hr_ct) * pct) + self.bl_hr_ct
+            c_t = ((self.bl_hr_ct - self.dusk_ct) * pct) + self.dusk_ct
             _LOGGER.debug(
                 "CT %s Blue Hour %s -> Night %s  pct: %s",
                 c_t,
@@ -1606,7 +1629,7 @@ class SunSettings:
                 SunSettings.next_solar_midnight,
                 SunSettings.bl_hr_nght_end,
             )
-            c_t = ((self.min_color_temp - self.bl_hr_ct) * pct) + self.bl_hr_ct
+            c_t = ((self.dusk_ct - self.min_color_temp) * pct) + self.min_color_temp
             _LOGGER.debug(
                 "CT %s Night %s -> Midnight %s  pct: %s",
                 c_t,

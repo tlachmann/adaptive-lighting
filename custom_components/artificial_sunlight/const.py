@@ -42,7 +42,7 @@ CONF_INITIAL_TRANSITION, DEFAULT_INITIAL_TRANSITION = "initial_transition", 0
 CONF_SLEEP_TRANSITION, DEFAULT_SLEEP_TRANSITION = "sleep_transition", 1
 CONF_INTERVAL, DEFAULT_INTERVAL = "interval", 90
 CONF_MAX_BRIGHTNESS, DEFAULT_MAX_BRIGHTNESS = "max_brightness", 100
-CONF_MAX_COLOR_TEMP, DEFAULT_MAX_COLOR_TEMP = "max_color_temp", 5500
+CONF_MAX_COLOR_TEMP, DEFAULT_MAX_COLOR_TEMP = "max_color_temp", 8000
 CONF_MIN_BRIGHTNESS, DEFAULT_MIN_BRIGHTNESS = "min_brightness", 1
 CONF_MIN_COLOR_TEMP, DEFAULT_MIN_COLOR_TEMP = "min_color_temp", 2000
 CONF_ONLY_ONCE, DEFAULT_ONLY_ONCE = "only_once", False
@@ -65,26 +65,17 @@ CONF_TRANSITION, DEFAULT_TRANSITION = "transition", 45
 # As documented in wikipedia: https://en.wikipedia.org/wiki/Twilight
 # sun is:
 ## values for brightness rendering
-CONF_LANDSCAPE_HORIZON, DEFAULT_LANDSCAPE_HORIZON = (
-    "landsacpe_horizon",
-    0,
-)  # additional value to extend sunlight brightness transistion above horizon.
-CONF_TWILIGHT_STAGE, DEFAULT_TWILIGHT_STAGE = (
-    "twilight_stage",
-    6,
-)  # defines the twilight stage when night ends and dawn begins (civil:-6, astornomical:-12, nautical:-18)
+# additional value to extend sunlight brightness transistion above horizon.
+CONF_LANDSCAPE_HORIZON, DEFAULT_LANDSCAPE_HORIZON = "landsacpe_horizon", 0
+# defines the twilight stage when night ends and dawn begins (civil:-6, astornomical:-12, nautical:-18)
+CONF_TWILIGHT_STAGE, DEFAULT_TWILIGHT_STAGE = "twilight_stage", 6
+# defines the colortemp at beginning of dawn
+CONF_DAWN_COLOR_TEMP, DEFAULT_DAWN_COLOR_TEMP = "dawn_color_temp", 3000
+# defines the colortemp at end of dusk
+CONF_DUSK_COLOR_TEMP, DEFAULT_DUSK_COLOR_TEMP = "dusk_color_temp", 3000
 
-CONF_DAWN_COLOR_TEMP, DEFAULT_DAWN_COLOR_TEMP = (
-    "dawn_color_temp",
-    6500,
-)  # defines the colortemp at beginning of dawn
-CONF_DUSK_COLOR_TEMP, DEFAULT_DUSK_COLOR_TEMP = (
-    "dusk_color_temp",
-    5000,
-)  # defines the colortemp at the end of dawn
-
-CONF_SUNRISE_COLOR_TEMP, DEFAULT_SUNRISE_COLOR_TEMP = "sunrise_color_temp", 3000
-CONF_SUNSET_COLOR_TEMP, DEFAULT_SUNSET_COLOR_TEMP = "sunset_color_temp", 5000  #
+CONF_SUNRISE_COLOR_TEMP, DEFAULT_SUNRISE_COLOR_TEMP = "sunrise_color_temp", 2000
+CONF_SUNSET_COLOR_TEMP, DEFAULT_SUNSET_COLOR_TEMP = "sunset_color_temp", 2000  #
 CONF_BLUEHOUR_CT, DEFAULT_BLUEHOUR_CT = "bluehour_color_temp", 20000  #
 # Defines Blue color as night light
 
