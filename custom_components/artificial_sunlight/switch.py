@@ -1445,6 +1445,12 @@ class SunSettings:
         pct = abs(val ** (1 / 4))
         return pct
 
+    def calc_pct_sqrt6(self, val1, val2, val3, val4) -> float:
+        """subfunction for calc pct."""
+        val = (val1 - val2) / (val3 - val4)
+        pct = abs(val ** (1 / 6))
+        return pct
+
     def calc_pct_sqrt8(self, val1, val2, val3, val4) -> float:
         """subfunction for calc pct."""
         val = (val1 - val2) / (val3 - val4)
@@ -1498,13 +1504,13 @@ class SunSettings:
         if SunSettings.prev_solar_midnight < now < SunSettings.next_bl_hr_mrnng_strt:
             # night to morning transistion
             night = True
-            pct = self.calc_pct_sqrt8(
+            pct = self.calc_pct_sqrt6(
                 SunSettings.next_bl_hr_mrnng_strt,
                 now,
                 SunSettings.next_bl_hr_mrnng_strt,
                 SunSettings.prev_solar_midnight,
             )
-            c_t = ((self.dawn_ct - self.min_color_temp) * pct) + self.min_color_temp
+            c_t = ((self.min_color_temp - self.dawn_ct) * pct) + self.dawn_ct
             _LOGGER.debug(
                 "CT %s Midnight %s -> Blue Hour %s  pct: %s",
                 c_t,
@@ -1561,7 +1567,7 @@ class SunSettings:
         if SunSettings.gldn_hr_mrnng_end <= now < SunSettings.solar_noon:
             # night to morning transistion
             night = False
-            pct = self.calc_pct_sqrt8(
+            pct = self.calc_pct_sqrt4(
                 now,
                 SunSettings.gldn_hr_mrnng_end,
                 SunSettings.solar_noon,
@@ -1582,7 +1588,7 @@ class SunSettings:
         if SunSettings.solar_noon <= now < SunSettings.gldn_hr_nght_strt:
             # brightness transistion evening
             night = False
-            pct = self.calc_pct_sqrt8(
+            pct = self.calc_pct_sqrt4(
                 SunSettings.gldn_hr_nght_strt,
                 now,
                 SunSettings.gldn_hr_nght_strt,
@@ -1646,7 +1652,7 @@ class SunSettings:
         if SunSettings.bl_hr_nght_end <= now < SunSettings.next_solar_midnight:
             # brightness transistion evening
             night = True
-            pct = self.calc_pct_sqrt8(
+            pct = self.calc_pct_sqrt6(
                 now,
                 SunSettings.bl_hr_nght_end,
                 SunSettings.next_solar_midnight,
